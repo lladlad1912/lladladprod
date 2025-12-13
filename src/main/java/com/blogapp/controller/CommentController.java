@@ -29,6 +29,12 @@ public class CommentController {
         return ResponseEntity.ok(comments);
     }
     
+    @GetMapping("/post/{postId}/all")
+    public ResponseEntity<List<CommentDTO>> getAllCommentsByPost(@PathVariable Long postId) {
+        List<CommentDTO> comments = commentService.getAllCommentsByPost(postId);
+        return ResponseEntity.ok(comments);
+    }
+    
     @PostMapping
     public ResponseEntity<?> createComment(@Valid @RequestBody Map<String, Object> request) {
         try {

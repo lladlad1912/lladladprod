@@ -2,7 +2,7 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
-function ProtectedRoute({ children, requireAdmin = false }) {
+function ProtectedRoute({ children, requireAdmin = false, requireEditorOrAdmin = false }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -24,10 +24,24 @@ function ProtectedRoute({ children, requireAdmin = false }) {
     );
   }
 
+  if (requireEditorOrAdmin && user.role !== 'ADMIN' && user.role !== 'EDITOR') {
+    return (
+      <div className="card">
+        <div className="error">
+          <h2>Access Denied</h2>
+          <p>You need editor or administrator privileges to access this page.</p>
+        </div>
+      </div>
+    );
+  }
+
   return children;
 }
 
 export default ProtectedRoute;
+
+
+
 
 
 

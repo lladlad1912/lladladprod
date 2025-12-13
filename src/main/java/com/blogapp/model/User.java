@@ -48,7 +48,7 @@ public class User {
     private String profileImage;
     
     @Column(name = "role")
-    private String role = "USER"; // USER, ADMIN
+    private String role = "USER"; // USER, EDITOR, ADMIN
     
     @Column(name = "enabled")
     private Boolean enabled = true;
@@ -75,6 +75,10 @@ public class User {
     // One user can have many likes
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostLike> likes = new ArrayList<>();
+    
+    // One user can have many bookmarks
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Bookmark> bookmarks = new ArrayList<>();
     
     @PrePersist
     protected void onCreate() {

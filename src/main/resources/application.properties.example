@@ -41,7 +41,7 @@ spring.mail.properties.mail.smtp.starttls.enable=true
 
 # Cache Configuration
 spring.cache.type=caffeine
-spring.cache.cache-names=categories,users,posts,userProfiles
+spring.cache.cache-names=categories,subcategories,users,posts,userProfiles
 spring.cache.caffeine.spec=maximumSize=500,expireAfterWrite=30m,expireAfterAccess=10m
 
 # Transaction Configuration
@@ -51,4 +51,7 @@ spring.jpa.properties.hibernate.connection.provider_autocommit=true
 spring.web.cors.allowed-origins=http://localhost:3000
 spring.web.cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
 spring.web.cors.allowed-headers=*
+
+
+
 

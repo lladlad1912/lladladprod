@@ -51,6 +51,11 @@ public class CommentService {
     }
     
     public List<CommentDTO> getAllCommentsByPost(Long postId) {
+        // Verify post exists
+        if (!postRepository.existsById(postId)) {
+            throw new RuntimeException("Post not found with id: " + postId);
+        }
+        
         // Get top-level comments (no parent)
         List<Comment> topLevelComments = commentRepository.findByPostIdAndParentIsNull(postId);
         return topLevelComments.stream()
@@ -124,10 +129,10 @@ public class CommentService {
     private CommentDTO convertToDTOWithReplies(Comment comment) {
         CommentDTO dto = convertToDTO(comment);
         
-        // Load and convert replies
+        // Load and convert replies recursively
         List<Comment> replies = commentRepository.findByParentIdOrderByCreatedAtAsc(comment.getId());
         List<CommentDTO> replyDTOs = replies.stream()
-                .map(this::convertToDTO)
+                .map(this::convertToDTOWithReplies)  // Recursive call to handle nested replies
                 .collect(Collectors.toList());
         dto.setReplies(replyDTOs);
         

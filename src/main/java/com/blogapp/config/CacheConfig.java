@@ -17,6 +17,7 @@ public class CacheConfig {
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager(
                 "categories",      // Cache for categories
+                "subcategories",  // Cache for subcategories
                 "users",          // Cache for users
                 "posts",          // Cache for posts
                 "userProfiles"    // Cache for user profiles
@@ -35,6 +36,9 @@ public class CacheConfig {
                 .recordStats();                           // Enable cache statistics
     }
 }
+
+
+
 
 
 

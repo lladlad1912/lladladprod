@@ -33,14 +33,22 @@ public class CustomUserDetailsService implements UserDetailsService {
     
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
         Collection<GrantedAuthority> authorities = new ArrayList<>();
-        // Add default role - can be extended for role-based access
+        // All users have USER role
         authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
-        if (user.getRole() != null && user.getRole().equals("ADMIN")) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        
+        // Add role-specific authorities
+        if (user.getRole() != null) {
+            if (user.getRole().equals("EDITOR")) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_EDITOR"));
+            } else if (user.getRole().equals("ADMIN")) {
+                authorities.add(new SimpleGrantedAuthority("ROLE_EDITOR"));
+                authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+            }
         }
         return authorities;
     }
 }
+
 
 
 

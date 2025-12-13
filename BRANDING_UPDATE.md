@@ -105,3 +105,15 @@ The branding is now complete! The application now features:
 All changes are live and will be visible when you refresh the frontend! 🎨
 
 
+
+
+
+
+
+
+
+
+
+
+
+

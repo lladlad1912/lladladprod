@@ -175,16 +175,41 @@ The application includes a dev profile that uses H2 in-memory database. No setup
 
 4. **Frontend will start on:** `http://localhost:3000`
 
-### 5. Default Admin User
+### 5. Default User Credentials
 
-The application automatically creates a default admin user on startup:
+The application automatically creates default users on startup (only if database is empty):
 
+#### 👤 Admin User
 - **Username:** `admin`
 - **Email:** `admin@lladlad.com`
-- **Password:** `admin123`
+- **Password:** `Admin123!@`
 - **Role:** `ADMIN`
+- **Permissions:** Full access - can create/edit/delete users, categories, subcategories, posts, manage settings, ads, etc.
 
-**⚠️ Important:** Change the default admin password in production!
+#### ✏️ Editor User
+- **Username:** `editor_user`
+- **Email:** `editor@lladlad.com`
+- **Password:** `Editor123!@`
+- **Role:** `EDITOR`
+- **Permissions:** Can create and edit their own posts, upload images, add hashtags and SEO content, select subcategories
+
+#### 👥 Regular Users
+- **Username:** `john_doe`
+- **Email:** `john@example.com`
+- **Password:** `Password123!@`
+- **Role:** `USER`
+- **Permissions:** Can view posts, comment, like posts, view profiles
+
+- **Username:** `jane_smith`
+- **Email:** `jane@example.com`
+- **Password:** `Pass123!@`
+- **Role:** `USER`
+- **Permissions:** Can view posts, comment, like posts, view profiles
+
+**⚠️ Important:** 
+- These users are only created if the database is empty (first run)
+- Change all default passwords in production!
+- For Google OAuth, the email must match an existing user in the database
 
 ## 📁 Project Structure
 
@@ -266,14 +291,32 @@ BlogApp/
 
 - **ADMIN Role:**
   - Create, update, delete users
-  - Create, update, delete categories
+  - Create, update, delete categories and subcategories
+  - Create, update, delete any posts
+  - Manage site settings (social media links, contact email, footer content)
+  - Manage ad placements
+  - View contact submissions
   - Full access to all endpoints
 
-- **USER Role:**
-  - Create, update, delete own posts
+- **EDITOR Role:**
+  - Create and edit their own posts
+  - Upload images
+  - Add hashtags and SEO metadata (meta title, description, keywords)
+  - Select subcategories for posts
+  - Use rich text editor (H1, H2, Bold, Italic, etc.)
+  - Support for Telugu language in posts
   - Comment on posts
   - Like posts
   - View all posts and categories
+  - Cannot delete posts (only admin can)
+  - Cannot edit other users' posts
+
+- **USER Role:**
+  - View all posts and categories
+  - Comment on posts
+  - Like posts
+  - View user profiles
+  - Cannot create or edit posts
 
 ### JWT Token
 
@@ -377,6 +420,7 @@ The production build will be in `frontend/build/` directory.
 
 ## 📚 Additional Documentation
 
+- **[User Credentials](CREDENTIALS.md)** - Default login credentials for all user roles (Admin, Editor, User)
 - [JWT Classes Explanation](JWT_CLASSES_EXPLANATION.md)
 - [Frontend Step-by-Step Guide](FRONTEND_STEP_BY_STEP_GUIDE.md)
 - [Backend Features](BACKEND_FEATURES.md)

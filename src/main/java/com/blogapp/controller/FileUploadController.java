@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,7 @@ public class FileUploadController {
     private String uploadDir;
     
     @PostMapping("/image")
+    @PreAuthorize("hasAnyRole('USER', 'EDITOR', 'ADMIN')")
     public ResponseEntity<?> uploadImage(@RequestParam("file") MultipartFile file) {
         try {
             if (file.isEmpty()) {
@@ -49,6 +51,7 @@ public class FileUploadController {
         }
     }
 }
+
 
 
 

@@ -28,6 +28,9 @@ public class UserController {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
@@ -111,6 +114,66 @@ public class UserController {
             return ResponseEntity.ok(updatedUser);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateMyProfile(@RequestBody Map<String, Object> profileData) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+            }
+            
+            String username = authentication.getName();
+            User currentUser = userRepository.findByUsername(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Update email if provided
+            if (profileData.containsKey("email") && profileData.get("email") != null) {
+                String newEmail = (String) profileData.get("email");
+                // Check if email is already taken by another user
+                if (!newEmail.equals(currentUser.getEmail()) && userRepository.existsByEmail(newEmail)) {
+                    return ResponseEntity.badRequest().body("Email already exists");
+                }
+                currentUser.setEmail(newEmail);
+            }
+            
+            // Update password if provided
+            if (profileData.containsKey("password") && profileData.get("password") != null) {
+                String newPassword = (String) profileData.get("password");
+                if (!newPassword.isEmpty()) {
+                    currentUser.setPassword(passwordEncoder.encode(newPassword));
+                }
+            }
+            
+            // Update profile image if provided
+            if (profileData.containsKey("profileImage") && profileData.get("profileImage") != null) {
+                currentUser.setProfileImage((String) profileData.get("profileImage"));
+            }
+            
+            // Update firstName if provided
+            if (profileData.containsKey("firstName")) {
+                currentUser.setFirstName((String) profileData.get("firstName"));
+            }
+            
+            // Update lastName if provided
+            if (profileData.containsKey("lastName")) {
+                currentUser.setLastName((String) profileData.get("lastName"));
+            }
+            
+            // Update bio if provided
+            if (profileData.containsKey("bio")) {
+                currentUser.setBio((String) profileData.get("bio"));
+            }
+            
+            // Note: username and user_id cannot be changed
+            
+            User updatedUser = userRepository.save(currentUser);
+            UserDTO userDTO = userService.getUserById(updatedUser.getId());
+            return ResponseEntity.ok(userDTO);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Failed to update profile: " + e.getMessage());
         }
     }
     

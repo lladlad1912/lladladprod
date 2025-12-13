@@ -36,9 +36,29 @@ public class Post {
     @Column(name = "image_path")
     private String imagePath;
     
+    // Hashtags - comma-separated string
+    @Column(name = "hashtags", length = 500)
+    private String hashtags;
+    
+    // SEO Meta Title
+    @Column(name = "meta_title", length = 200)
+    private String metaTitle;
+    
+    // SEO Meta Description
+    @Column(name = "meta_description", length = 500)
+    private String metaDescription;
+    
+    // SEO Keywords
+    @Column(name = "meta_keywords", length = 500)
+    private String metaKeywords;
+    
     // View count for the post
     @Column(name = "view_count", nullable = false)
     private Long viewCount = 0L;
+    
+    // Post status: DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED
+    @Column(name = "status", nullable = false, length = 20)
+    private String status = "PUBLISHED"; // Default for existing posts
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -61,6 +81,11 @@ public class Post {
     @JoinColumn(name = "category_id", nullable = false)
     private Category category;
     
+    // Many posts can belong to one subcategory (optional)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "sub_category_id")
+    private SubCategory subCategory;
+    
     // One post can have many comments
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Comment> comments = new ArrayList<>();
@@ -68,6 +93,10 @@ public class Post {
     // One post can have many likes
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PostLike> likes = new ArrayList<>();
+    
+    // One post can have many bookmarks
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Bookmark> bookmarks = new ArrayList<>();
     
     @PrePersist
     protected void onCreate() {

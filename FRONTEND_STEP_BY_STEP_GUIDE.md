@@ -1161,3 +1161,15 @@ User Action → Component Function → API Call → Backend → Response → Sta
 This is the complete picture of how the frontend works! 🎉
 
 
+
+
+
+
+
+
+
+
+
+
+
+

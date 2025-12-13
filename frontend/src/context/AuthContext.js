@@ -69,7 +69,24 @@ export const AuthProvider = ({ children }) => {
   const googleLogin = async (googleUserData) => {
     try {
       const response = await authApi.googleOAuthCallback(googleUserData);
-      const { token: newToken, ...userData } = response.data;
+      const responseData = response.data;
+      
+      // Check if profile setup is needed
+      if (responseData.needsProfileSetup) {
+        const { token: newToken, id, username, email } = responseData;
+        setToken(newToken);
+        localStorage.setItem('token', newToken);
+        // Store user data temporarily for profile setup
+        localStorage.setItem('pendingProfileSetup', JSON.stringify({ id, username, email }));
+        return { 
+          success: true, 
+          needsProfileSetup: true,
+          userData: { id, username, email }
+        };
+      }
+      
+      // Normal login flow
+      const { token: newToken, ...userData } = responseData;
       setToken(newToken);
       setUser(userData);
       localStorage.setItem('token', newToken);
@@ -92,6 +109,14 @@ export const AuthProvider = ({ children }) => {
     return user?.role === 'ADMIN';
   };
 
+  const isEditor = () => {
+    return user?.role === 'EDITOR' || user?.role === 'ADMIN';
+  };
+
+  const isUser = () => {
+    return user?.role === 'USER';
+  };
+
   const value = {
     user,
     token,
@@ -101,11 +126,14 @@ export const AuthProvider = ({ children }) => {
     googleLogin,
     logout,
     isAdmin,
+    isEditor,
+    isUser,
     loadCurrentUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
 
 
 

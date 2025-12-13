@@ -23,9 +23,16 @@ public class PostDTO {
     private String authorUsername;
     private Long categoryId;
     private String categoryName;
+    private Long subCategoryId;
+    private String subCategoryName;
     private Long commentCount = 0L;
     private Long likeCount = 0L;
     private Boolean liked = false;
     private Long viewCount = 0L;
+    private String hashtags;
+    private String metaTitle;
+    private String metaDescription;
+    private String metaKeywords;
+    private String status; // DRAFT, PENDING_REVIEW, PUBLISHED, REJECTED
 }
 
