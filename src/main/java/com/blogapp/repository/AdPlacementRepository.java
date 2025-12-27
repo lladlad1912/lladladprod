@@ -24,3 +24,14 @@ public interface AdPlacementRepository extends JpaRepository<AdPlacement, Long> 
 
 
 
+
+
+
+
+
+
+
+
+
+
+

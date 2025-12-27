@@ -23,3 +23,14 @@ public interface SiteSettingsRepository extends JpaRepository<SiteSettings, Long
 
 
 
+
+
+
+
+
+
+
+
+
+
+

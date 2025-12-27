@@ -1,18 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getAllSettings, getUserBookmarks } from '../services/api';
-import { FacebookIcon, InstagramIcon, TwitterIcon, YouTubeIcon } from './SocialIcons';
+import { getAllSettings, updateSetting, getUserBookmarks, subscribeToNewsletter } from '../services/api';
+import { FacebookIcon, InstagramIcon, TwitterIcon } from './SocialIcons';
 import AdPlacement from './AdPlacement';
 import '../App.css';
 
 function Sidebar({ onClose }) {
-  const { user, isEditor, isAdmin } = useAuth();
-  const [settings, setSettings] = useState({});
+  const { user, isEditor, isAdmin, loadCurrentUser } = useAuth();
   const [bookmarks, setBookmarks] = useState([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(false);
   const [showPostmarksSidebar, setShowPostmarksSidebar] = useState(false);
   const [postmarksSearchQuery, setPostmarksSearchQuery] = useState('');
+  const [settings, setSettings] = useState({});
+  const [socialOrder, setSocialOrder] = useState(['facebook', 'instagram', 'twitter', 'email']);
+  const [socialEditMode, setSocialEditMode] = useState(false);
+  const [socialDragKey, setSocialDragKey] = useState(null);
+  const [newsletterNotice, setNewsletterNotice] = useState(null);
+  const [subscribing, setSubscribing] = useState(false);
+  const socialEditorRef = useRef(null);
 
   useEffect(() => {
     loadSettings();
@@ -24,7 +30,15 @@ function Sidebar({ onClose }) {
   const loadSettings = async () => {
     try {
       const response = await getAllSettings();
-      setSettings(response.data);
+      const settingsData = response.data || {};
+      setSettings(settingsData);
+      if (settingsData.social_order) {
+        const parsed = String(settingsData.social_order)
+          .split(',')
+          .map(s => s.trim())
+          .filter(Boolean);
+        if (parsed.length > 0) setSocialOrder(parsed);
+      }
     } catch (err) {
       console.error('Failed to load settings:', err);
     }
@@ -42,8 +56,119 @@ function Sidebar({ onClose }) {
     }
   };
 
+  const canEditSocial = isAdmin() || isEditor();
+
+  const socialItems = useMemo(() => {
+    const hrefFor = {
+      facebook: settings.social_facebook || 'https://facebook.com/lladlad',
+      instagram: settings.social_instagram || 'https://instagram.com/lladlad',
+      twitter: settings.social_twitter || 'https://twitter.com/lladlad',
+      email: `mailto:${settings.contact_email || 'contact@lladlad.com'}`
+    };
+    const labelFor = {
+      facebook: 'Facebook',
+      instagram: 'Instagram',
+      twitter: 'Twitter',
+      email: 'Email'
+    };
+    const iconFor = {
+      facebook: <FacebookIcon size={18} />,
+      instagram: <InstagramIcon size={18} />,
+      twitter: <TwitterIcon size={18} />,
+      email: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+      )
+    };
+    return socialOrder
+      .map((k) => ({ key: k, href: hrefFor[k], icon: iconFor[k], label: labelFor[k] || k }))
+      .filter((x) => x.href && x.icon);
+  }, [settings, socialOrder]);
+
+  const persistSocialOrder = async (order) => {
+    try {
+      await updateSetting('social_order', order.join(','), 'Order of social icons (comma-separated keys)');
+      setSettings(prev => ({ ...prev, social_order: order.join(',') }));
+    } catch (err) {
+      console.error('Failed to update social order:', err);
+    }
+  };
+
+  const reorderSocial = async (fromKey, toKey) => {
+    if (!fromKey || !toKey || fromKey === toKey) return;
+    const current = [...socialOrder];
+    const fromIdx = current.indexOf(fromKey);
+    const toIdx = current.indexOf(toKey);
+    if (fromIdx === -1 || toIdx === -1) return;
+    current.splice(fromIdx, 1);
+    current.splice(toIdx, 0, fromKey);
+    setSocialOrder(current);
+    await persistSocialOrder(current);
+  };
+
+  useEffect(() => {
+    if (!socialEditMode) return;
+    const onDocMouseDown = (e) => {
+      if (socialEditorRef.current && !socialEditorRef.current.contains(e.target)) {
+        setSocialEditMode(false);
+        setSocialDragKey(null);
+      }
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    return () => document.removeEventListener('mousedown', onDocMouseDown);
+  }, [socialEditMode]);
+
   return (
     <aside className="sidebar">
+      {/* Newsletter subscribe CTA (shown until user subscribes) */}
+      {user && !user.newsletterSubscribed && (
+        <div className="sidebar-card">
+          <h3 style={{ marginTop: 0 }}>Newsletter</h3>
+          <p style={{ marginTop: '0.35rem', color: '#64748b', fontSize: '0.9rem' }}>
+            Subscribe to get updates when new posts and products are added.
+          </p>
+          {newsletterNotice && (
+            <div
+              style={{
+                marginTop: '0.5rem',
+                padding: '0.6rem 0.75rem',
+                borderRadius: 10,
+                border: '1px solid rgba(0,0,0,0.08)',
+                background: newsletterNotice.type === 'error' ? '#fef2f2' : '#ecfdf5',
+                color: '#0f172a',
+                fontSize: '0.9rem'
+              }}
+            >
+              {newsletterNotice.message}
+            </div>
+          )}
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ width: '100%', marginTop: '0.6rem' }}
+            disabled={subscribing}
+            onClick={async () => {
+              try {
+                setNewsletterNotice(null);
+                setSubscribing(true);
+                await subscribeToNewsletter();
+                await loadCurrentUser();
+                setNewsletterNotice({ type: 'success', message: 'Subscribed successfully!' });
+              } catch (e) {
+                console.error(e);
+                setNewsletterNotice({ type: 'error', message: 'Failed to subscribe. Please try again.' });
+              } finally {
+                setSubscribing(false);
+              }
+            }}
+          >
+            {subscribing ? 'Subscribing...' : 'Subscribe to Newsletter'}
+          </button>
+        </div>
+      )}
+
       {/* Bookmarks Section - for all users */}
       <div className="sidebar-card">
         {!user ? (
@@ -244,114 +369,78 @@ function Sidebar({ onClose }) {
         </>
       )}
 
-      {/* Social Media Links - for all users */}
+      {/* Social icons should live ONLY in the side navbar */}
       <div className="sidebar-card">
-        <h3>Follow Us</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {settings.social_facebook && (
-            <a
-              href={settings.social_facebook}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sidebar-social-link"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem',
-                background: '#f9fafb',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                color: '#1e293b',
-                transition: 'all 0.2s'
-              }}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+          <h3 style={{ margin: 0 }}>Follow us</h3>
+          {canEditSocial && (
+            <button
+              type="button"
+              className="sidebar-social-edit-btn"
+              title={socialEditMode ? 'Close reorder' : 'Reorder social icons'}
+              onClick={() => setSocialEditMode(v => !v)}
             >
-              <FacebookIcon size={20} />
-              <span>Facebook</span>
-            </a>
-          )}
-          {settings.social_instagram && (
-            <a
-              href={settings.social_instagram}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sidebar-social-link"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem',
-                background: '#f9fafb',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                color: '#1e293b',
-                transition: 'all 0.2s'
-              }}
-            >
-              <InstagramIcon size={20} />
-              <span>Instagram</span>
-            </a>
-          )}
-          {settings.social_twitter && (
-            <a
-              href={settings.social_twitter}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sidebar-social-link"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem',
-                background: '#f9fafb',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                color: '#1e293b',
-                transition: 'all 0.2s'
-              }}
-            >
-              <TwitterIcon size={20} />
-              <span>Twitter</span>
-            </a>
-          )}
-          {settings.social_youtube ? (
-            <a
-              href={settings.social_youtube}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sidebar-social-link"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.75rem',
-                padding: '0.75rem',
-                background: '#f9fafb',
-                borderRadius: '6px',
-                textDecoration: 'none',
-                color: '#1e293b',
-                transition: 'all 0.2s'
-              }}
-            >
-              <YouTubeIcon size={20} />
-              <span>YouTube</span>
-            </a>
-          ) : (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.75rem',
-              padding: '0.75rem',
-              background: '#f9fafb',
-              borderRadius: '6px',
-              color: '#94a3b8',
-              fontSize: '0.9rem'
-            }}>
-              <YouTubeIcon size={20} />
-              <span>YouTube (Not configured)</span>
-            </div>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"></path>
+              </svg>
+            </button>
           )}
         </div>
+
+        <div className="sidebar-social-icons">
+          {socialItems.map((item) => (
+            <a
+              key={item.key}
+              href={item.href}
+              target={item.key === 'email' ? undefined : '_blank'}
+              rel={item.key === 'email' ? undefined : 'noopener noreferrer'}
+              className="sidebar-social-icon"
+              aria-label={item.key}
+            >
+              <span className="sidebar-social-icon-left">{item.icon}</span>
+              <span className="sidebar-social-icon-label">{item.label}</span>
+            </a>
+          ))}
+        </div>
+
+        {canEditSocial && socialEditMode && (
+          <div
+            ref={socialEditorRef}
+            className="sidebar-social-reorder-panel"
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <div className="sidebar-social-reorder-title">Reorder icons</div>
+            {socialItems.map((item) => (
+              <div
+                key={item.key}
+                className="sidebar-social-reorder-row"
+                draggable
+                onDragStart={() => setSocialDragKey(item.key)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  reorderSocial(socialDragKey, item.key);
+                  setSocialDragKey(null);
+                }}
+                title="Drag to move"
+              >
+                <span className="sidebar-social-reorder-handle">⋮⋮</span>
+                <span className="sidebar-social-reorder-icon">{item.icon}</span>
+                <span className="sidebar-social-reorder-key">{item.key}</span>
+              </div>
+            ))}
+            <button
+              type="button"
+              className="sidebar-social-reorder-done"
+              onClick={() => setSocialEditMode(false)}
+            >
+              Done
+            </button>
+          </div>
+        )}
       </div>
+
       {user && (
         <div className="sidebar-card">
           <h3>Profile</h3>

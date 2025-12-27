@@ -100,7 +100,12 @@ function MagazinePostList() {
       setDisplayPosts(sortedPosts);
       setError(null);
     } catch (err) {
-      setError('Failed to load posts. Make sure the backend is running.');
+      const status = err?.response?.status;
+      if (status === 429) {
+        setError('Too many requests. Please wait a moment and refresh.');
+      } else {
+        setError('Failed to load posts. Make sure the backend is running.');
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -316,7 +321,7 @@ function MagazinePostList() {
                   >
                     {/* Edit/Delete buttons at top right */}
                     <div className="magazine-card-header-actions">
-                      {isEditor() && user?.id === post.authorId && (
+                      {(isAdmin() || (user?.id === post.authorId && (isEditor() || user?.role === 'USER'))) && (
                         <Link 
                           to={`/posts/${post.id}/edit`}
                           className="magazine-edit-btn"

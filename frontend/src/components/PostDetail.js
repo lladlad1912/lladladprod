@@ -220,7 +220,7 @@ function PostDetail() {
             <div className="card" style={{ position: 'relative' }}>
               {/* Edit/Delete buttons at top right */}
               <div className="post-detail-header-actions">
-                {isEditor() && user?.id === post.authorId && (
+                {(isAdmin() || (user?.id === post.authorId && (isEditor() || user?.role === 'USER'))) && (
                   <Link 
                     to={`/posts/${id}/edit`}
                     className="magazine-edit-btn"

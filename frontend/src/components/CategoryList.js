@@ -16,7 +16,7 @@ function CategoryList() {
   const [success, setSuccess] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [formData, setFormData] = useState({ name: '', description: '' });
+  const [formData, setFormData] = useState({ name: '', description: '', showInHeader: false });
 
   useEffect(() => {
     loadCategories();
@@ -46,7 +46,7 @@ function CategoryList() {
         await createCategory(formData);
         setSuccess('Category created successfully!');
       }
-      setFormData({ name: '', description: '' });
+      setFormData({ name: '', description: '', showInHeader: false });
       setEditingId(null);
       setShowForm(false);
       loadCategories();
@@ -58,15 +58,35 @@ function CategoryList() {
   };
 
   const handleEdit = (category) => {
-    setFormData({ name: category.name, description: category.description || '' });
+    setFormData({
+      name: category.name,
+      description: category.description || '',
+      showInHeader: !!category.showInHeader
+    });
     setEditingId(category.id);
     setShowForm(true);
   };
 
   const handleCancel = () => {
-    setFormData({ name: '', description: '' });
+    setFormData({ name: '', description: '', showInHeader: false });
     setEditingId(null);
     setShowForm(false);
+  };
+
+  const handleToggleHeader = async (category, nextValue) => {
+    try {
+      await updateCategory(category.id, {
+        name: category.name,
+        description: category.description || '',
+        showInHeader: nextValue
+      });
+      setSuccess(nextValue ? 'Added category to header!' : 'Removed category from header!');
+      loadCategories();
+      setTimeout(() => setSuccess(null), 2000);
+    } catch (err) {
+      setError(err.response?.data || 'Failed to update header setting');
+      setTimeout(() => setError(null), 3000);
+    }
   };
 
   const handleDelete = async (id) => {
@@ -156,6 +176,17 @@ function CategoryList() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
+                <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <input
+                    type="checkbox"
+                    checked={!!formData.showInHeader}
+                    onChange={(e) => setFormData({ ...formData, showInHeader: e.target.checked })}
+                    id="show-in-header"
+                  />
+                  <label htmlFor="show-in-header" style={{ margin: 0, cursor: 'pointer' }}>
+                    Show this category in Header
+                  </label>
+                </div>
                 <button type="submit" className="btn btn-primary">
                   {editingId ? 'Update Category' : 'Create Category'}
                 </button>
@@ -177,6 +208,19 @@ function CategoryList() {
                     <div className="post-meta">
                       {category.postCount || 0} post(s) • Created: {new Date(category.createdAt).toLocaleDateString()}
                     </div>
+                    {isAdmin() && (
+                      <div style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={!!category.showInHeader}
+                          onChange={(e) => handleToggleHeader(category, e.target.checked)}
+                          id={`header-toggle-${category.id}`}
+                        />
+                        <label htmlFor={`header-toggle-${category.id}`} style={{ margin: 0, cursor: 'pointer' }}>
+                          Add to Header
+                        </label>
+                      </div>
+                    )}
                     {isAdmin() && (
                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
                         <button 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SidebarProvider, useSidebar } from './context/SidebarContext';
-import { getTotalSiteViews, getAllSettings, getCategories, getSubCategoriesByCategory, searchPosts, searchAll } from './services/api';
+import { getTotalSiteViews, getCategories, getSubCategoriesByCategory, searchPosts, searchAll } from './services/api';
 import './App.css';
 import PostList from './components/PostList';
 import MagazinePostList from './components/MagazinePostList';
@@ -15,7 +15,6 @@ import UserList from './components/UserList';
 import Login from './components/Login';
 import Register from './components/Register';
 import UserProfile from './components/UserProfile';
-import { FacebookIcon, InstagramIcon, TwitterIcon } from './components/SocialIcons';
 import ProtectedRoute from './components/ProtectedRoute';
 import Logo from './components/Logo';
 import AdminSettings from './components/AdminSettings';
@@ -26,15 +25,15 @@ import PostmarksPage from './components/PostmarksPage';
 import ProfileSetup from './components/ProfileSetup';
 import PostReviewPage from './components/PostReviewPage';
 import SEO from './components/SEO';
+import ProductsPage from './components/ProductsPage';
 
 function Navbar() {
-  const { user, logout, isAdmin, isEditor } = useAuth();
+  const { user, logout } = useAuth();
   const { sidebarOpen, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [totalViews, setTotalViews] = useState(0);
-  const [settings, setSettings] = useState({});
   const [categories, setCategories] = useState([]);
   const [subCategoriesMap, setSubCategoriesMap] = useState({});
   const [hoveredCategory, setHoveredCategory] = useState(null);
@@ -52,16 +51,6 @@ function Navbar() {
         setTotalViews(response.data.totalViews || 0);
       } catch (err) {
         console.error('Failed to load total views:', err);
-      }
-    };
-    
-    // Load site settings for social links
-    const loadSettings = async () => {
-      try {
-        const response = await getAllSettings();
-        setSettings(response.data);
-      } catch (err) {
-        console.error('Failed to load settings:', err);
       }
     };
     
@@ -95,7 +84,6 @@ function Navbar() {
     };
     
     loadTotalViews();
-    loadSettings();
     loadCategories();
     // Refresh every 30 seconds
     const interval = setInterval(loadTotalViews, 30000);
@@ -393,13 +381,20 @@ function Navbar() {
         </div>
         <div className="nav-menu">
           <div className="nav-categories">
-            {categories
-              .filter(cat => ['Books', 'Movies', 'Tech', 'Dharma', 'Gaming'].includes(cat.name))
-              .sort((a, b) => {
-                const order = ['Books', 'Movies', 'Tech', 'Dharma', 'Gaming'];
-                return order.indexOf(a.name) - order.indexOf(b.name);
-              })
-              .map((category) => {
+            {(() => {
+              const baseOrder = ['Books', 'Movies', 'Tech', 'Dharma', 'Gaming'];
+              // Header categories are controlled ONLY via showInHeader flag.
+              const headerCategories = categories.filter(c => c.showInHeader);
+
+              // Keep the existing header order first, and append any additional header categories to the right.
+              const base = headerCategories
+                .filter(c => baseOrder.includes(c.name))
+                .sort((a, b) => baseOrder.indexOf(a.name) - baseOrder.indexOf(b.name));
+              const extra = headerCategories
+                .filter(c => !baseOrder.includes(c.name))
+                .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+              return [...base, ...extra].map((category) => {
                 const subCategories = subCategoriesMap[category.id] || [];
                 const hasSubCategories = subCategories.length > 0;
                 
@@ -432,7 +427,8 @@ function Navbar() {
                     )}
                   </div>
                 );
-              })}
+              });
+            })()}
           </div>
           {/* Hits Counter - moved to better location */}
           <div className="nav-hits">
@@ -567,6 +563,14 @@ function AppContent() {
             } 
           />
           <Route path="/write-for-lladlad" element={<WriteForLladlad />} />
+          <Route
+            path="/products"
+            element={
+              <ProtectedRoute>
+                <ProductsPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </main>
       <Footer />

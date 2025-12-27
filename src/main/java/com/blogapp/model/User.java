@@ -53,6 +53,12 @@ public class User {
     @Column(name = "enabled")
     private Boolean enabled = true;
     
+    @Column(name = "newsletter_subscribed", nullable = false)
+    private Boolean newsletterSubscribed = false;
+
+    @Column(name = "newsletter_subscribed_at")
+    private LocalDateTime newsletterSubscribedAt;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     

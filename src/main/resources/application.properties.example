@@ -52,6 +52,10 @@ spring.web.cors.allowed-origins=http://localhost:3000
 spring.web.cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS
 spring.web.cors.allowed-headers=*
 
+# Razorpay (Test Mode)
+razorpay.key-id=rzp_test_xxxxxxxxxxxxx
+razorpay.key-secret=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
 
 
 

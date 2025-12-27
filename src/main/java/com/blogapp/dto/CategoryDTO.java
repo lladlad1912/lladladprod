@@ -13,9 +13,12 @@ public class CategoryDTO {
     private Long id;
     private String name;
     private String description;
+    private boolean showInHeader;
     private LocalDateTime createdAt;
     private Long postCount;
 }
+
+
 
 
 

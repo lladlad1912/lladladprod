@@ -92,6 +92,15 @@ public class DataInitializer implements CommandLineRunner {
             twitter.setDescription("Twitter profile URL");
             settingsRepository.save(twitter);
         }
+
+        // Default order for Follow Us icons (used by footer drag-and-drop)
+        if (!settingsRepository.existsByKey("social_order")) {
+            SiteSettings order = new SiteSettings();
+            order.setKey("social_order");
+            order.setValue("facebook,instagram,twitter,email");
+            order.setDescription("Order of social icons in footer (comma-separated keys)");
+            settingsRepository.save(order);
+        }
         
         // Initialize contact email
         if (!settingsRepository.existsByKey("contact_email")) {
@@ -131,14 +140,19 @@ public class DataInitializer implements CommandLineRunner {
                     // Update description if needed
                     if (existing.getDescription() == null || existing.getDescription().isEmpty()) {
                         existing.setDescription(description);
-                        categoryRepository.save(existing);
                     }
+                    // Ensure default header categories are checked initially, but do not override explicit admin choice.
+                    if (existing.getShowInHeader() == null) {
+                        existing.setShowInHeader(true);
+                    }
+                    categoryRepository.save(existing);
                 },
                 () -> {
                     // Create new category
                     Category newCategory = new Category();
                     newCategory.setName(categoryName);
                     newCategory.setDescription(description);
+                    newCategory.setShowInHeader(true);
                     categoryRepository.save(newCategory);
                 }
             );

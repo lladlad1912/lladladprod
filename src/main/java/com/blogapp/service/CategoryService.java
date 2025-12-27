@@ -44,7 +44,8 @@ public class CategoryService {
         return convertToDTO(savedCategory);
     }
     
-    @CacheEvict(value = "categories", key = "#id")
+    // Updating a category can affect the list view (and header categories), so evict all cached entries.
+    @CacheEvict(value = "categories", allEntries = true)
     @Transactional(isolation = Isolation.READ_COMMITTED)
     public CategoryDTO updateCategory(Long id, Category categoryDetails) {
         Category category = categoryRepository.findById(id)
@@ -59,6 +60,11 @@ public class CategoryService {
         
         if (categoryDetails.getDescription() != null) {
             category.setDescription(categoryDetails.getDescription());
+        }
+
+        // Allow toggling whether category appears in header (only when provided)
+        if (categoryDetails.getShowInHeader() != null) {
+            category.setShowInHeader(categoryDetails.getShowInHeader());
         }
         
         Category updatedCategory = categoryRepository.save(category);
@@ -77,6 +83,7 @@ public class CategoryService {
         dto.setId(category.getId());
         dto.setName(category.getName());
         dto.setDescription(category.getDescription());
+        dto.setShowInHeader(Boolean.TRUE.equals(category.getShowInHeader()));
         dto.setCreatedAt(category.getCreatedAt());
         dto.setPostCount((long) category.getPosts().size());
         return dto;

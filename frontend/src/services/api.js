@@ -161,6 +161,14 @@ export const toggleFollow = (followingId) => api.post(`/follows/toggle/${followi
 export const checkFollow = (followingId) => api.get(`/follows/check/${followingId}`);
 export const getFollowCounts = (userId) => api.get(`/follows/count/${userId}`);
 
+// Payments (Razorpay)
+export const createRazorpayOrder = (payload) => api.post('/payments/razorpay/order', payload);
+export const verifyRazorpayPayment = (payload) => api.post('/payments/razorpay/verify', payload);
+
+// Newsletter
+export const getNewsletterStatus = () => api.get('/newsletter/status');
+export const subscribeToNewsletter = () => api.post('/newsletter/subscribe');
+
 export default api;
 
 

@@ -1,7 +1,7 @@
 // 🔹 CHANGED: single React import, added useRef here
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getComments, getAllComments, createComment, deleteComment } from '../services/api';
+import { getComments, getAllComments, createComment, updateComment, deleteComment } from '../services/api';
 import '../App.css';
 
 /**
@@ -14,17 +14,25 @@ const CommentItem = ({
   user,
   replyingTo,
   replyText,
+  editingId,
+  editText,
   onReplyClick,
   onReplySubmit,
   onReplyCancel,
   onReplyTextChange,
+  onEditClick,
+  onEditTextChange,
+  onEditSave,
+  onEditCancel,
   onDeleteComment
 }) => {
   const isReply = depth > 0;
   const maxDepth = 3;
+  const isEditing = editingId === comment.id;
 
   // 🔹 ADDED: local ref for this reply textarea
   const replyInputRef = useRef(null);
+  const editInputRef = useRef(null);
 
   // 🔹 ADDED: focus reply box when this comment is the one being replied to
   useEffect(() => {
@@ -37,6 +45,16 @@ const CommentItem = ({
       el.setSelectionRange(len, len);
     }
   }, [replyingTo, comment.id]);
+
+  // Focus edit box when entering edit mode for this comment
+  useEffect(() => {
+    if (isEditing && editInputRef.current) {
+      const el = editInputRef.current;
+      el.focus();
+      const len = el.value.length;
+      el.setSelectionRange(len, len);
+    }
+  }, [isEditing]);
 
   return (
     <div className={isReply ? "comment-reply" : ""} style={{ marginBottom: '1rem' }}>
@@ -71,9 +89,39 @@ const CommentItem = ({
                 {new Date(comment.createdAt).toLocaleString()}
               </span>
             </div>
-            <p style={{ margin: '0.5rem 0', lineHeight: '1.6' }}>{comment.content}</p>
+            {!isEditing ? (
+              <p style={{ margin: '0.5rem 0', lineHeight: '1.6' }}>{comment.content}</p>
+            ) : (
+              <div style={{ marginTop: '0.75rem', padding: '1rem', background: '#f8f9fa', borderRadius: '6px' }}>
+                <textarea
+                  ref={editInputRef}
+                  className="form-textarea"
+                  placeholder="Update your comment..."
+                  value={editText}
+                  onChange={onEditTextChange}
+                  rows="2"
+                  style={{ marginBottom: '0.5rem' }}
+                />
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button
+                    onClick={() => onEditSave(comment.id)}
+                    className="btn btn-primary"
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={onEditCancel}
+                    className="btn btn-secondary"
+                    style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
             
-            {user && depth < maxDepth && (
+            {user && depth < maxDepth && !isEditing && (
               <button
                 onClick={() => onReplyClick(comment.id)}
                 className="btn"
@@ -142,13 +190,25 @@ const CommentItem = ({
             )}
           </div>
           {(user?.id === comment.userId || user?.role === 'ADMIN') && (
-            <button
-              onClick={() => onDeleteComment(comment.id)}
-              className="btn btn-danger"
-              style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
-            >
-              Delete
-            </button>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              {!isEditing && (
+                <button
+                  onClick={() => onEditClick(comment)}
+                  className="btn btn-secondary"
+                  style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
+                  title="Edit comment"
+                >
+                  Edit
+                </button>
+              )}
+              <button
+                onClick={() => onDeleteComment(comment.id)}
+                className="btn btn-danger"
+                style={{ padding: '0.25rem 0.5rem', fontSize: '0.85rem' }}
+              >
+                Delete
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -162,8 +222,12 @@ function CommentSection({ postId }) {
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editText, setEditText] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notice, setNotice] = useState(null); // { type: 'success' | 'error', message: string }
+  const noticeTimerRef = useRef(null);
 
   // 🔹 REMOVED replyInputRef + useEffect from here
   // focus is now handled inside CommentItem for the right textarea only
@@ -172,6 +236,18 @@ function CommentSection({ postId }) {
     loadComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
+
+  useEffect(() => {
+    return () => {
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    };
+  }, []);
+
+  const showNotice = (type, message) => {
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current);
+    setNotice({ type, message });
+    noticeTimerRef.current = setTimeout(() => setNotice(null), 2500);
+  };
 
   const loadComments = async () => {
     try {
@@ -232,10 +308,12 @@ function CommentSection({ postId }) {
         content: newComment
       });
       setNewComment('');
+      showNotice('success', 'Comment posted');
       loadComments();
     } catch (err) {
       setError('Failed to add comment');
       console.error(err);
+      showNotice('error', 'Failed to post comment');
     }
   };
 
@@ -252,10 +330,12 @@ function CommentSection({ postId }) {
       });
       setReplyText('');
       setReplyingTo(null);
+      showNotice('success', 'Reply posted');
       loadComments();
     } catch (err) {
       setError('Failed to add reply');
       console.error(err);
+      showNotice('error', 'Failed to post reply');
     }
   };
 
@@ -263,9 +343,11 @@ function CommentSection({ postId }) {
     if (window.confirm('Delete this comment?')) {
       try {
         await deleteComment(commentId);
+        showNotice('success', 'Comment deleted');
         loadComments();
       } catch (err) {
         setError('Failed to delete comment');
+        showNotice('error', 'Failed to delete comment');
       }
     }
   };
@@ -292,12 +374,54 @@ function CommentSection({ postId }) {
   }, [comments]);
 
   const handleReplyClick = (commentId) => {
+    // If editing, cancel edit first
+    if (editingId) {
+      setEditingId(null);
+      setEditText('');
+    }
     setReplyingTo(replyingTo === commentId ? null : commentId);
   };
 
   const handleReplyCancel = () => {
     setReplyingTo(null);
     setReplyText('');
+  };
+
+  const handleEditClick = (comment) => {
+    // Close reply box if open
+    setReplyingTo(null);
+    setReplyText('');
+    setEditingId(comment.id);
+    setEditText(comment.content || '');
+  };
+
+  const handleEditTextChange = (e) => {
+    setEditText(e.target.value);
+  };
+
+  const handleEditCancel = () => {
+    setEditingId(null);
+    setEditText('');
+  };
+
+  const handleEditSave = async (commentId) => {
+    if (!user) return;
+    if (!editText.trim()) return;
+    try {
+      await updateComment(commentId, {
+        postId: parseInt(postId),
+        userId: user.id,
+        content: editText
+      });
+      setEditingId(null);
+      setEditText('');
+      showNotice('success', 'Comment updated');
+      loadComments();
+    } catch (err) {
+      console.error(err);
+      setError('Failed to update comment');
+      showNotice('error', 'Failed to update comment');
+    }
   };
 
   if (loading) {
@@ -308,6 +432,11 @@ function CommentSection({ postId }) {
     <div style={{ marginTop: '2rem', borderTop: '1px solid #ddd', paddingTop: '2rem' }}>
       <h3>Comments ({totalComments})</h3>
       
+      {notice && (
+        <div className={notice.type === 'success' ? 'success' : 'error'}>
+          {notice.message}
+        </div>
+      )}
       {error && <div className="error">{error}</div>}
 
       {user && (
@@ -346,10 +475,16 @@ function CommentSection({ postId }) {
               user={user}
               replyingTo={replyingTo}
               replyText={replyText}
+              editingId={editingId}
+              editText={editText}
               onReplyClick={handleReplyClick}
               onReplySubmit={handleReplySubmit}
               onReplyCancel={handleReplyCancel}
               onReplyTextChange={handleReplyTextChange}
+              onEditClick={handleEditClick}
+              onEditTextChange={handleEditTextChange}
+              onEditSave={handleEditSave}
+              onEditCancel={handleEditCancel}
               onDeleteComment={handleDeleteComment}
             />
           ))

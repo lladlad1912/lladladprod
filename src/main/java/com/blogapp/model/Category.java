@@ -27,6 +27,10 @@ public class Category {
     
     @Column(length = 500)
     private String description;
+
+    // Whether this category should appear in the top header navigation
+    @Column(name = "show_in_header", nullable = false)
+    private Boolean showInHeader = false;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;

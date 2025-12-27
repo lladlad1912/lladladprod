@@ -20,5 +20,7 @@ public class UserDTO {
     private String role;
     private LocalDateTime createdAt;
     private Long postCount;
+    private boolean newsletterSubscribed;
+    private LocalDateTime newsletterSubscribedAt;
 }
 

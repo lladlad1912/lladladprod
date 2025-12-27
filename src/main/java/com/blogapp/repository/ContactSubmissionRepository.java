@@ -24,3 +24,14 @@ public interface ContactSubmissionRepository extends JpaRepository<ContactSubmis
 
 
 
+
+
+
+
+
+
+
+
+
+
+

@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import { createPost, updatePost, getPost, getCategories, getSubCategoriesByCategory, uploadImage } from '../services/api';
 import Sidebar from './Sidebar';
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import RichTextEditor from './RichTextEditor';
 import '../App.css';
 
 function PostForm() {
@@ -34,10 +33,6 @@ function PostForm() {
   const [loadingPost, setLoadingPost] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  const quillRef = useRef(null);
-
-  // Header categories that should be visible to all users
-  const headerCategories = ['Movies', 'Tech', 'Dharma', 'Gaming'];
 
   useEffect(() => {
     loadCategories();
@@ -48,6 +43,7 @@ function PostForm() {
       loadPost();
     }
   }, [id, isEditMode]);
+
   
   const loadPost = async () => {
     try {
@@ -88,25 +84,11 @@ function PostForm() {
   const loadCategories = async () => {
     try {
       const response = await getCategories();
-      let allCategories = response.data || [];
-      
-      // Filter to show only header categories for all users
-      // Use case-insensitive comparison to handle any case differences
-      const filteredCategories = allCategories.filter(cat => 
-        headerCategories.some(headerCat => 
-          headerCat.toLowerCase() === (cat.name || '').toLowerCase()
-        )
-      );
-      
-      // If filtered categories exist, use them; otherwise use all categories as fallback
-      if (filteredCategories.length > 0) {
-        setCategories(filteredCategories);
-        if (filteredCategories.length > 0) {
-          setFormData(prev => ({ ...prev, categoryId: filteredCategories[0].id }));
-        }
-      } else if (allCategories.length > 0) {
-        // Fallback: show all categories if none match (shouldn't happen, but safety net)
-        setCategories(allCategories);
+      const allCategories = response.data || [];
+
+      // Show all categories for post creation/edit.
+      setCategories(allCategories);
+      if (allCategories.length > 0 && !formData.categoryId) {
         setFormData(prev => ({ ...prev, categoryId: allCategories[0].id }));
       }
     } catch (err) {
@@ -148,53 +130,37 @@ function PostForm() {
     }
   };
 
-  const handleContentChange = (value) => {
-    setFormData({
-      ...formData,
-      content: value
-    });
+  const handleContentChange = (html) => {
+    setFormData((prev) => ({ ...prev, content: html }));
   };
 
-  // Custom image handler for ReactQuill
-  const imageHandler = () => {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
+  const handleInlineImageUpload = async (file) => {
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image size must be less than 5MB');
+      setTimeout(() => setError(null), 3000);
+      return null;
+    }
 
-    input.onchange = async () => {
-      const file = input.files[0];
-      if (!file) return;
-
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError('Image size must be less than 5MB');
-        setTimeout(() => setError(null), 3000);
-        return;
+    try {
+      setLoading(true);
+      const uploadResponse = await uploadImage(file);
+      const { url, filename } = uploadResponse.data || {};
+      if (url) {
+        return url.startsWith('http') ? url : `http://localhost:8080${url}`;
       }
-
-      try {
-        setLoading(true);
-        const uploadResponse = await uploadImage(file);
-        const imageUrl = `http://localhost:8080/uploads/${uploadResponse.data.filename}`;
-        
-        // Get the current editor instance from ref
-        const quill = quillRef.current?.getEditor();
-        if (quill) {
-          const range = quill.getSelection(true);
-          if (range) {
-            quill.insertEmbed(range.index, 'image', imageUrl, 'user');
-            quill.setSelection(range.index + 1);
-          }
-        }
-      } catch (err) {
-        setError('Failed to upload image: ' + (err.response?.data || err.message));
-        console.error('Image upload error:', err);
-        setTimeout(() => setError(null), 5000);
-      } finally {
-        setLoading(false);
+      if (filename) {
+        return `http://localhost:8080/uploads/${filename}`;
       }
-    };
+      return null;
+    } catch (err) {
+      setError('Failed to upload image: ' + (err.response?.data || err.message));
+      console.error('Image upload error:', err);
+      setTimeout(() => setError(null), 5000);
+      return null;
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImageChange = (e) => {
@@ -274,7 +240,25 @@ function PostForm() {
         </div>
         <div className={`magazine-main ${sidebarOpen ? 'sidebar-open' : ''}`}>
           <div style={{ maxWidth: '800px', margin: '0.5rem auto', padding: '0 1rem' }}>
-            <h1>{isEditMode ? 'Edit Post' : 'Create New Post'}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+              <h1 style={{ margin: 0 }}>{isEditMode ? 'Edit Post' : 'Create New Post'}</h1>
+              {isEditMode && (
+                <button
+                  type="button"
+                  className="btn btn-back"
+                  onClick={() => {
+                    // Prefer browser back; fallback to home if history stack isn't available.
+                    try {
+                      navigate(-1);
+                    } catch (e) {
+                      navigate('/');
+                    }
+                  }}
+                >
+                  ← Back
+                </button>
+              )}
+            </div>
             
             {loadingPost && <div className="loading">Loading post...</div>}
       
@@ -283,7 +267,7 @@ function PostForm() {
                 {error && <div className="error">{error}</div>}
                 {success && <div className="success">{success}</div>}
 
-                <form onSubmit={handleSubmit} className="card">
+                <form onSubmit={handleSubmit} className="card" style={{ position: 'relative', zIndex: 1 }}>
         <div className="form-group">
           <label className="form-label">Title *</label>
           <input
@@ -298,33 +282,12 @@ function PostForm() {
 
         <div className="form-group" style={{ marginBottom: '2rem' }}>
           <label className="form-label">Content *</label>
-          <div className="editor-wrapper" style={{ marginBottom: '1rem' }}>
-            <ReactQuill
-              ref={quillRef}
-              theme="snow"
+          <div className="editor-wrapper">
+            <RichTextEditor
               value={formData.content}
               onChange={handleContentChange}
               placeholder="Write your post content here... (Supports Telugu and English)"
-              modules={{
-                toolbar: {
-                  container: [
-                    [{ 'header': [1, 2, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-                    ['link', 'image'],
-                    ['clean']
-                  ],
-                  handlers: {
-                    image: imageHandler
-                  }
-                }
-              }}
-              formats={[
-                'header',
-                'bold', 'italic', 'underline', 'strike',
-                'list', 'bullet',
-                'link', 'image'
-              ]}
+              onUploadImage={handleInlineImageUpload}
             />
           </div>
           <small style={{ color: '#666', display: 'block', marginTop: '0.5rem' }}>

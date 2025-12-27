@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from './Logo';
-import { FacebookIcon, InstagramIcon, TwitterIcon } from './SocialIcons';
 import { getAllSettings, getPosts } from '../services/api';
 import '../App.css';
 
@@ -69,37 +68,7 @@ function Footer() {
               <p>Have questions or feedback?</p>
               <p>We'd love to hear from you!</p>
               <div className="footer-social">
-                <a 
-                  href={settings.social_facebook || "https://facebook.com/lladlad"} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="social-link"
-                  aria-label="Facebook"
-                >
-                  <FacebookIcon size={20} />
-                  <span>Facebook</span>
-                </a>
-                <a 
-                  href={settings.social_instagram || "https://instagram.com/lladlad"} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="social-link"
-                  aria-label="Instagram"
-                >
-                  <InstagramIcon size={20} />
-                  <span>Instagram</span>
-                </a>
-                <a 
-                  href={settings.social_twitter || "https://twitter.com/lladlad"} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="social-link"
-                  aria-label="Twitter"
-                >
-                  <TwitterIcon size={20} />
-                  <span>Twitter</span>
-                </a>
-                <a 
+                <a
                   href={`mailto:${settings.contact_email || 'contact@lladlad.com'}`}
                   className="social-link"
                   aria-label="Email"

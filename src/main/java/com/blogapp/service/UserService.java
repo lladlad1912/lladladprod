@@ -123,6 +123,8 @@ public class UserService {
         dto.setRole(user.getRole());
         dto.setCreatedAt(user.getCreatedAt());
         dto.setPostCount((long) user.getPosts().size());
+        dto.setNewsletterSubscribed(Boolean.TRUE.equals(user.getNewsletterSubscribed()));
+        dto.setNewsletterSubscribedAt(user.getNewsletterSubscribedAt());
         return dto;
     }
 }

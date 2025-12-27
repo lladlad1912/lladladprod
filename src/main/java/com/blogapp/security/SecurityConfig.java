@@ -33,6 +33,9 @@ public class SecurityConfig {
     
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    @Autowired
+    private RateLimitingFilter rateLimitingFilter;
     
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -58,6 +61,8 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
+                // ✅ Allow CORS preflight requests (browsers send OPTIONS before multipart/form-data uploads, etc.)
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/oauth2/**").permitAll()  // OAuth2 endpoints - public
                 // Public GET endpoints for posts
@@ -89,7 +94,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.DELETE, "/api/comments/**").authenticated()  // DELETE comment - authenticated
                 .requestMatchers("/api/likes/**").authenticated()  // Likes - authenticated
                 .requestMatchers("/api/settings").permitAll()  // GET settings - public
-                .requestMatchers("/api/settings/**").hasRole("ADMIN")  // PUT settings - admin only
+                .requestMatchers("/api/settings/**").hasAnyRole("ADMIN", "EDITOR")  // PUT settings - admin/editor
                 .requestMatchers("/api/ads/active").permitAll()  // GET active ads - public
                 .requestMatchers("/api/ads/position/**").permitAll()  // GET ads by position - public
                 .requestMatchers("/api/ads/**").hasRole("ADMIN")  // POST, PUT, DELETE ads - admin only
@@ -97,6 +102,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/contact/**").hasRole("ADMIN")  // GET, PUT, DELETE submissions - admin only
                 .requestMatchers("/api/statistics/**").hasAnyRole("ADMIN", "EDITOR", "USER")  // Statistics - ADMIN, EDITOR, and USER
                 .requestMatchers("/api/follows/**").authenticated()  // Follow endpoints - authenticated
+                        .requestMatchers("/api/newsletter/**").authenticated()  // Newsletter - authenticated
+                        .requestMatchers("/api/payments/**").authenticated()  // Payments - authenticated
                 .requestMatchers("/api/search").permitAll()  // Unified search - public
                 .requestMatchers("/sitemap.xml").permitAll()  // Sitemap - public
                 .requestMatchers("/sitemap.txt").permitAll()  // Sitemap text - public
@@ -105,6 +112,12 @@ public class SecurityConfig {
             );
         
         http.authenticationProvider(authenticationProvider());
+        // Apply rate limiting early in the chain (before auth filters).
+        // IMPORTANT: Spring Security can only position filters relative to *known* framework filters.
+        // Using a custom filter class (e.g., JwtAuthenticationFilter.class) as an anchor throws:
+        // "does not have a registered order".
+        // Order of these calls matters: rate limiting is inserted first, then JWT, both before UsernamePasswordAuthenticationFilter.
+        http.addFilterBefore(rateLimitingFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         
         return http.build();

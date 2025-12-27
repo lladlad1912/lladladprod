@@ -35,7 +35,12 @@ function PostList() {
       setPosts(response.data.content || response.data);
       setError(null);
     } catch (err) {
-      setError('Failed to load posts. Make sure the backend is running.');
+      const status = err?.response?.status;
+      if (status === 429) {
+        setError('Too many requests. Please wait a moment and refresh.');
+      } else {
+        setError('Failed to load posts. Make sure the backend is running.');
+      }
       console.error(err);
     } finally {
       setLoading(false);

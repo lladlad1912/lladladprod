@@ -28,7 +28,7 @@ public class SiteSettingsController {
     }
     
     @PutMapping("/{key}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN','EDITOR')")
     public ResponseEntity<?> updateSetting(
             @PathVariable String key,
             @RequestBody Map<String, String> request) {
@@ -38,6 +38,8 @@ public class SiteSettingsController {
         return ResponseEntity.ok(Map.of("success", true, "message", "Setting updated"));
     }
 }
+
+
 
 
 
