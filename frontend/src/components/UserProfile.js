@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import { getUserProfile, uploadImage, updateMyProfile, getFollowCounts } from '../services/api';
 import Sidebar from './Sidebar';
+import { uploadUrl } from '../config';
 import '../App.css';
 
 function UserProfile() {
@@ -188,7 +189,7 @@ function UserProfile() {
                 <div style={{ textAlign: 'center' }}>
                   {user?.profileImage ? (
                     <img 
-                      src={user.profileImage.startsWith('http') ? user.profileImage : `http://localhost:8080/uploads/${user.profileImage}`} 
+                      src={uploadUrl(user.profileImage)} 
                       alt="Profile" 
                       style={{ width: '150px', height: '150px', borderRadius: '50%', objectFit: 'cover' }}
                     />

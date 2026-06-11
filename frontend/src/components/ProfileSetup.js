@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import { updateMyProfile, uploadImage } from '../services/api';
 import Sidebar from './Sidebar';
+import { uploadUrl } from '../config';
 import '../App.css';
 
 function ProfileSetup() {
@@ -43,7 +44,7 @@ function ProfileSetup() {
         profileImage: null
       });
       if (user.profileImage) {
-        setImagePreview(`http://localhost:8080/uploads/${user.profileImage}`);
+        setImagePreview(uploadUrl(user.profileImage));
       }
     }
   }, [user]);
@@ -248,6 +249,9 @@ function ProfileSetup() {
 }
 
 export default ProfileSetup;
+
+
+
 
 
 

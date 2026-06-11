@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getComments, getAllComments, createComment, updateComment, deleteComment } from '../services/api';
+import { uploadUrl } from '../config';
 import '../App.css';
 
 /**
@@ -64,7 +65,7 @@ const CommentItem = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
               {comment.userProfileImage ? (
                 <img 
-                  src={`http://localhost:8080/uploads/${comment.userProfileImage}`}
+                  src={uploadUrl(comment.userProfileImage)}
                   alt={comment.username}
                   style={{ width: '32px', height: '32px', borderRadius: '50%' }}
                 />

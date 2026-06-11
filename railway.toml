@@ -1,0 +1,10 @@
+[build]
+builder = "NIXPACKS"
+buildCommand = "chmod +x mvnw && ./mvnw -DskipTests package"
+
+[deploy]
+startCommand = "java -Dspring.profiles.active=prod -jar target/blog-application-1.0.0.jar"
+healthcheckPath = "/api/categories"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

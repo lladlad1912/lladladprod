@@ -8,6 +8,7 @@ import YouTubeEmbed from './YouTubeEmbed';
 import CommentSection from './CommentSection';
 import SEO from './SEO';
 import StructuredData from './StructuredData';
+import { SITE_URL, uploadUrl } from '../config';
 import '../App.css';
 
 // CommentSection - no memoization to prevent typing issues
@@ -138,9 +139,9 @@ function PostDetail() {
   }
 
   // Prepare SEO data
-  const siteUrl = process.env.REACT_APP_SITE_URL || 'http://localhost:3000';
+  const siteUrl = SITE_URL;
   const postImage = post.imagePath 
-    ? `http://localhost:8080/uploads/${post.imagePath}` 
+    ? uploadUrl(post.imagePath) 
     : (post.youtubeUrl ? `https://img.youtube.com/vi/${post.youtubeVideoId || ''}/maxresdefault.jpg` : null);
   const postUrl = `${siteUrl}/posts/${post.id}`;
   const postDescription = post.metaDescription || post.content?.replace(/<[^>]*>/g, '').substring(0, 160) || 'Read this post on lladlad';
@@ -275,7 +276,7 @@ function PostDetail() {
               {post.imagePath && (
                 <div style={{ marginBottom: '1rem' }}>
                   <img 
-                    src={`http://localhost:8080/uploads/${post.imagePath}`}
+                    src={uploadUrl(post.imagePath)}
                     alt={post.metaDescription || post.title || 'Post image'}
                     title={post.title}
                     style={{ width: '100%', borderRadius: '8px', maxHeight: '400px', objectFit: 'cover' }}

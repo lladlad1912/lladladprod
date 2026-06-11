@@ -201,7 +201,7 @@ function SubCategoryList() {
           </p>
           <ul style={{ margin: '0.5rem 0 0 1.5rem', color: '#1e40af' }}>
             <li>Check the browser console (F12) for errors</li>
-            <li>Verify the backend is running on http://localhost:8080</li>
+            <li>Verify the backend API is reachable (check REACT_APP_API_URL)</li>
             <li>Go to the <a href="/categories" style={{ color: '#1e3a8a', fontWeight: 'bold' }}>Categories</a> page to create categories</li>
             <li>Click the Refresh button above to reload</li>
           </ul>

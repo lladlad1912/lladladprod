@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import { getPostsForReview, approvePost, rejectPost } from '../services/api';
 import Sidebar from './Sidebar';
+import { uploadUrl } from '../config';
 import '../App.css';
 
 function PostReviewPage() {
@@ -305,7 +306,7 @@ function PostReviewPage() {
                           <div style={{ flex: '0 0 200px', minWidth: '200px' }}>
                             {post.imagePath ? (
                               <img 
-                                src={`http://localhost:8080/uploads/${post.imagePath}`}
+                                src={uploadUrl(post.imagePath)}
                                 alt={post.title}
                                 style={{
                                   width: '100%',

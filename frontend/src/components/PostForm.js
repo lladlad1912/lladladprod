@@ -5,6 +5,7 @@ import { useSidebar } from '../context/SidebarContext';
 import { createPost, updatePost, getPost, getCategories, getSubCategoriesByCategory, uploadImage } from '../services/api';
 import Sidebar from './Sidebar';
 import RichTextEditor from './RichTextEditor';
+import { uploadUrl, resolveUploadUrl } from '../config';
 import '../App.css';
 
 function PostForm() {
@@ -71,7 +72,7 @@ function PostForm() {
       
       // Set image preview if image exists
       if (post.imagePath) {
-        setImagePreview(`http://localhost:8080/uploads/${post.imagePath}`);
+        setImagePreview(uploadUrl(post.imagePath));
       }
     } catch (err) {
       setError('Failed to load post');
@@ -147,10 +148,10 @@ function PostForm() {
       const uploadResponse = await uploadImage(file);
       const { url, filename } = uploadResponse.data || {};
       if (url) {
-        return url.startsWith('http') ? url : `http://localhost:8080${url}`;
+        return resolveUploadUrl(url);
       }
       if (filename) {
-        return `http://localhost:8080/uploads/${filename}`;
+        return uploadUrl(filename);
       }
       return null;
     } catch (err) {

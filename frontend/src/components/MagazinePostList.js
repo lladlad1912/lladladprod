@@ -7,6 +7,7 @@ import Sidebar from './Sidebar';
 import AdPlacement from './AdPlacement';
 import SEO from './SEO';
 import StructuredData from './StructuredData';
+import { SITE_URL, uploadUrl } from '../config';
 import '../App.css';
 
 function MagazinePostList() {
@@ -242,7 +243,7 @@ function MagazinePostList() {
     return <div className="loading">Loading posts...</div>;
   }
 
-  const siteUrl = process.env.REACT_APP_SITE_URL || 'http://localhost:3000';
+  const siteUrl = SITE_URL;
   const categoryName = categoryParam ? categories.find(c => c.name === categoryParam)?.name : null;
   const pageTitle = categoryName ? `${categoryName} Posts | lladlad` : 'lladlad - Blog Posts';
   const pageDescription = categoryName 
@@ -351,7 +352,7 @@ function MagazinePostList() {
                       <Link to={`/posts/${post.id}`}>
                         {post.imagePath ? (
                           <img 
-                            src={`http://localhost:8080/uploads/${post.imagePath}`}
+                            src={uploadUrl(post.imagePath)}
                             alt={post.metaDescription || post.title || 'Post image'}
                             title={post.title}
                             onLoad={(e) => {

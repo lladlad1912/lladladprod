@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { SITE_URL } from '../config';
 
 /**
  * SEO Component - Dynamically updates meta tags for better SEO
@@ -19,7 +20,7 @@ function SEO({
   tags
 }) {
   const location = useLocation();
-  const siteUrl = process.env.REACT_APP_SITE_URL || 'http://localhost:3000';
+  const siteUrl = SITE_URL;
   const siteName = 'lladlad';
   const defaultImage = `${siteUrl}/logo192.png`; // You can add a default OG image
   
@@ -101,6 +102,9 @@ function SEO({
 }
 
 export default SEO;
+
+
+
 
 
 

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import { getUserBookmarks } from '../services/api';
 import Sidebar from './Sidebar';
+import { uploadUrl } from '../config';
 import '../App.css';
 
 function PostmarksPage() {
@@ -190,7 +191,7 @@ function PostmarksPage() {
                       {bookmark.postImagePath && (
                         <div style={{ marginBottom: '1rem' }}>
                           <img 
-                            src={`http://localhost:8080/uploads/${bookmark.postImagePath}`}
+                            src={uploadUrl(bookmark.postImagePath)}
                             alt={bookmark.postTitle}
                             style={{
                               width: '100%',
