@@ -12,7 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/contact")
-@CrossOrigin(origins = "http://localhost:3000")
 public class ContactController {
     
     @Autowired
@@ -49,6 +48,9 @@ public class ContactController {
         return ResponseEntity.noContent().build();
     }
 }
+
+
+
 
 
 

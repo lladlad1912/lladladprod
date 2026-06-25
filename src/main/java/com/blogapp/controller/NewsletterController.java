@@ -13,7 +13,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/newsletter")
-@CrossOrigin(origins = "http://localhost:3000")
 public class NewsletterController {
 
     private final UserRepository userRepository;
@@ -54,6 +53,9 @@ public class NewsletterController {
         return userRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
     }
 }
+
+
+
 
 
 

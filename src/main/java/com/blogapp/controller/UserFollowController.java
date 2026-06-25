@@ -15,7 +15,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/follows")
-@CrossOrigin(origins = "http://localhost:3000")
 public class UserFollowController {
     
     @Autowired
@@ -92,6 +91,9 @@ public class UserFollowController {
         }
     }
 }
+
+
+
 
 
 

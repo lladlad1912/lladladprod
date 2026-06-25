@@ -12,7 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ads")
-@CrossOrigin(origins = "http://localhost:3000")
 public class AdPlacementController {
     
     @Autowired
@@ -59,6 +58,9 @@ public class AdPlacementController {
         return ResponseEntity.ok(Map.of("success", true));
     }
 }
+
+
+
 
 
 

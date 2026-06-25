@@ -9,7 +9,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/likes")
-@CrossOrigin(origins = "http://localhost:3000")
 public class PostLikeController {
     
     @Autowired
@@ -40,6 +39,9 @@ public class PostLikeController {
         return ResponseEntity.ok(Map.of("count", count));
     }
 }
+
+
+
 
 
 
