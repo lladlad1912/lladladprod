@@ -1,0 +1,17 @@
+# Netlify — frontend only (backend stays on Railway)
+# Site settings → Build & deploy should match this file.
+
+[build]
+  base = "frontend"
+  command = "npm run build"
+  publish = "build"
+
+[build.environment]
+  # CRA treats ESLint warnings as errors when CI=true (Netlify sets this by default)
+  CI = "false"
+
+# React Router — serve index.html for all routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
