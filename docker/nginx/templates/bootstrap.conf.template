@@ -1,0 +1,30 @@
+# Phase 1 — HTTP only (generated from template by deploy.sh)
+
+upstream lladlad_backend {
+    server backend:8080;
+}
+
+server {
+    listen 80;
+    server_name YOUR_DOMAIN www.YOUR_DOMAIN;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location /api/ {
+        proxy_pass http://lladlad_backend/api/;
+        include /etc/nginx/snippets/proxy-params.conf;
+    }
+
+    location /uploads/ {
+        proxy_pass http://lladlad_backend/uploads/;
+        include /etc/nginx/snippets/proxy-params.conf;
+    }
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+}

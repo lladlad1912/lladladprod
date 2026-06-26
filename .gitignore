@@ -49,6 +49,7 @@ frontend/.pnp.js
 .env.development.local
 .env.test.local
 .env.production.local
+docker/.env
 
 # Application properties with sensitive data
 src/main/resources/application.properties

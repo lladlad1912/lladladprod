@@ -1,0 +1,25 @@
+# Template for a future app on the same VPS
+# Copy to nginx/templates/myotherapp-ssl.conf.template, generate to conf.d/myotherapp.conf
+# Add a new docker-compose service + upstream block pointing to myotherapp-backend:PORT
+
+upstream myotherapp_backend {
+    server myotherapp-backend:8080;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name app2.yourdomain.com;
+
+    ssl_certificate     /etc/letsencrypt/live/LETSENCRYPT_DOMAIN/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/LETSENCRYPT_DOMAIN/privkey.pem;
+
+    location /api/ {
+        proxy_pass http://myotherapp_backend/api/;
+        include /etc/nginx/snippets/proxy-params.conf;
+    }
+
+    location / {
+        root /usr/share/nginx/html/myotherapp;
+        try_files $uri $uri/ /index.html;
+    }
+}

@@ -1,0 +1,10 @@
+target/
+frontend/node_modules/
+frontend/build/
+uploads/
+.git/
+.idea/
+*.md
+docker/.env
+**/.env
+**/*.log
