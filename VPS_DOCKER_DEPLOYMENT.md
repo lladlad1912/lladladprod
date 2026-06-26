@@ -144,6 +144,19 @@ Single domain serves both site and API:
 
 ---
 
+## 9. Cloudflare (optional)
+
+To put Cloudflare in front of this VPS (CDN, DDoS protection, edge SSL), see **[CLOUDFLARE.md](./CLOUDFLARE.md)**.
+
+Key points:
+
+- Use SSL mode **Full (strict)**
+- Bypass cache for `/api/*`
+- Nginx real-IP snippet is already in `docker/nginx/snippets/cloudflare-real-ip.conf`
+- Plan for Let’s Encrypt renewal when the orange cloud is on
+
+---
+
 ## Troubleshooting
 
 | Issue | Fix |

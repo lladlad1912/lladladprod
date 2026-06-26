@@ -131,7 +131,11 @@ Protected pages wrap content in `<ProtectedRoute>` which checks auth + role befo
 
 ## Production deployment (Docker VPS)
 
-See [VPS_DOCKER_DEPLOYMENT.md](../VPS_DOCKER_DEPLOYMENT.md).
+See [VPS_DOCKER_DEPLOYMENT.md](../VPS_DOCKER_DEPLOYMENT.md). Optional CDN/WAF: [CLOUDFLARE.md](../CLOUDFLARE.md).
+
+```
+Browser → [Cloudflare optional] → Nginx → React + /api → Spring Boot → MySQL
+```
 
 | Container | Role |
 |-----------|------|
