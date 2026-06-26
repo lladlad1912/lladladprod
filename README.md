@@ -15,6 +15,7 @@ Full-stack blog platform — Spring Boot backend, React frontend, MySQL database
 | [**Frontend**](./docs/FRONTEND.md) | React routes, components, Context, API usage, user flows |
 | [**Database**](./docs/DATABASE.md) | MySQL schema, tables, relationships, seed data |
 | [**VPS Docker Deploy**](./VPS_DOCKER_DEPLOYMENT.md) | Production: Docker + Nginx + Let's Encrypt + GoDaddy |
+| [**Cloudflare**](./CLOUDFLARE.md) | CDN/WAF in front of VPS: SSL mode, cache rules, real IP |
 
 Start with **Architecture** if you're new to the project.
 
