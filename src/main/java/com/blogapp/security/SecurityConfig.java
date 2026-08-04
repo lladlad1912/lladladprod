@@ -112,8 +112,12 @@ public class SecurityConfig {
                 .requestMatchers("/sitemap.xml").permitAll()  // Sitemap - public
                 .requestMatchers("/sitemap.txt").permitAll()  // Sitemap text - public
                 .requestMatchers("/uploads/**").permitAll()
+                .requestMatchers("/h2-console/**").permitAll()  // H2 console (dev profile only)
                 .anyRequest().authenticated()
             );
+
+        // Required for H2 console UI (uses frames)
+        http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
         
         http.authenticationProvider(authenticationProvider());
         // Apply rate limiting early in the chain (before auth filters).

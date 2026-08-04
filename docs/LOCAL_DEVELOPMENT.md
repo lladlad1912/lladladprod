@@ -71,10 +71,28 @@ Open the **same repo folder** in both, or open `frontend/` as a separate window 
 
 Backend URL: http://localhost:8080
 
+**Important:** The backend is an **API only** — there is no homepage at `http://localhost:8080/`. A blank page or **403 Forbidden** is normal.
+
+**Test with these URLs:**
+
+| URL | Expected |
+|-----|----------|
+| http://localhost:8080/api/categories | JSON list of categories |
+| http://localhost:8080/api/posts | JSON list of posts |
+
 **Why `dev` profile?** Uses **H2 in-memory** DB — no MySQL install. See [DATABASE.md](./DATABASE.md).
 
-**H2 console (optional):** http://localhost:8080/h2-console  
-JDBC URL: `jdbc:h2:mem:blogdb` · User: `sa` · Password: *(empty)*
+**H2 console (optional):** http://localhost:8080/h2-console
+
+| Field | Value |
+|-------|--------|
+| JDBC URL | `jdbc:h2:mem:blogdb` |
+| User | `sa` |
+| Password | *(leave empty)* |
+
+Click **Connect**. Restart the backend after code updates if H2 console previously returned 403.
+
+**Website UI:** Start the frontend separately — http://localhost:3000 (see below).
 
 ---
 

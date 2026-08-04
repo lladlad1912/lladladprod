@@ -16,7 +16,8 @@ All docs are in **[docs/](./docs/README.md)**.
 | [**Environments**](./docs/ENVIRONMENTS.md) | **Dev, staging, production** — profiles, MySQL, Docker |
 | [**Architecture**](./docs/ARCHITECTURE.md) | How frontend, backend, and DB connect |
 | [**Local development**](./docs/LOCAL_DEVELOPMENT.md) | IntelliJ + VS Code, run locally (H2) |
-| [**Deployment**](./docs/DEPLOYMENT.md) | Contabo VPS + Docker + Nginx + Let's Encrypt |
+| [**Staging**](./docs/STAGING.md) | Staging on Contabo — MySQL, subdomain, deploy workflow |
+| [**Deployment**](./docs/DEPLOYMENT.md) | Production — Contabo + Docker + Nginx |
 | [**Cloudflare**](./docs/CLOUDFLARE.md) | CDN/WAF in front of VPS |
 | [**Backend**](./docs/BACKEND.md) | Spring Boot layers, patterns, API |
 | [**Frontend**](./docs/FRONTEND.md) | React routes, components, flows |

@@ -77,7 +77,7 @@ chmod +x scripts/*.sh
 ./scripts/deploy-staging.sh
 ```
 
-**Cloudflare for staging:** Add `A` record `staging` → VPS IP (proxied). For non-standard origin port **8443**, use Cloudflare **Origin Rules** or DNS-only during testing. See [CLOUDFLARE.md](./CLOUDFLARE.md).
+**Cloudflare for staging:** See **[STAGING.md](./STAGING.md)** for full setup (DNS, ports 8080/8443, Origin Rules, deploy workflow).
 
 **Staging vs prod differences:**
 

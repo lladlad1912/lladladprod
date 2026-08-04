@@ -22,6 +22,7 @@ All project documentation lives in this folder. Start here, then drill into what
 | Document | Purpose |
 |----------|---------|
 | [DEPLOYMENT.md](./DEPLOYMENT.md) | Contabo VPS + Docker + Nginx + Let's Encrypt |
+| [STAGING.md](./STAGING.md) | **Staging environment** — MySQL, subdomain, deploy workflow |
 | [CLOUDFLARE.md](./CLOUDFLARE.md) | CDN/WAF in front of VPS — SSL, cache rules, real IP |
 
 ---
@@ -32,6 +33,7 @@ All project documentation lives in this folder. Start here, then drill into what
 |------------|------|
 | Run locally on my laptop | [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) |
 | Understand dev vs staging vs prod | [ENVIRONMENTS.md](./ENVIRONMENTS.md) |
+| Deploy staging on Contabo | [STAGING.md](./STAGING.md) |
 | Deploy production on Contabo | [DEPLOYMENT.md](./DEPLOYMENT.md) |
 | Add Cloudflare | [CLOUDFLARE.md](./CLOUDFLARE.md) |
 | Add a new API endpoint | [BACKEND.md](./BACKEND.md) → Making changes safely |
