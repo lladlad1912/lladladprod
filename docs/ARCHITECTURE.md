@@ -131,7 +131,7 @@ Protected pages wrap content in `<ProtectedRoute>` which checks auth + role befo
 
 ## Production deployment (Docker VPS)
 
-See [VPS_DOCKER_DEPLOYMENT.md](../VPS_DOCKER_DEPLOYMENT.md). Optional CDN/WAF: [CLOUDFLARE.md](../CLOUDFLARE.md).
+See [DEPLOYMENT.md](./DEPLOYMENT.md). Optional CDN/WAF: [CLOUDFLARE.md](./CLOUDFLARE.md). Environments: [ENVIRONMENTS.md](./ENVIRONMENTS.md).
 
 ```
 Browser → [Cloudflare optional] → Nginx → React + /api → Spring Boot → MySQL
@@ -154,17 +154,21 @@ One domain serves everything:
 
 ## Local development
 
-| Terminal | Command | Port |
-|----------|---------|------|
-| Backend | `.\mvnw.cmd spring-boot:run -Dspring-boot.run.arguments=--spring.profiles.active=dev` | 8080 |
-| Frontend | `cd frontend && npm start` | 3000 |
+See **[LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md)** for IDE setup (IntelliJ + VS Code), prerequisites, and troubleshooting.
 
-Dev profile uses **H2 in-memory** database — no MySQL install required.
+| Process | Command | Port |
+|---------|---------|------|
+| Backend | `dev` profile — H2, no MySQL (see LOCAL_DEVELOPMENT.md) | 8080 |
+| Frontend | `cd frontend && npm install && npm start` | 3000 |
+
+Dev profile uses **H2 in-memory** database. **Production uses MySQL.**
 
 ---
 
 ## Related docs
 
+- [ENVIRONMENTS.md](./ENVIRONMENTS.md) — dev, staging, production
 - [BACKEND.md](./BACKEND.md) — Java/Spring details, patterns, endpoints
 - [FRONTEND.md](./FRONTEND.md) — React components, routes, flows
 - [DATABASE.md](./DATABASE.md) — MySQL schema, tables, relationships
+- [DEPLOYMENT.md](./DEPLOYMENT.md) — Contabo VPS Docker deploy

@@ -23,8 +23,9 @@ MySQL 8 · Spring Data JPA · Hibernate
 
 | Aspect | Choice | Reason |
 |--------|--------|--------|
-| **Production DB** | MySQL 8.0 | Mature, matches local dev, JDBC well-supported |
-| **Dev DB (profile `dev`)** | H2 in-memory | Zero install for quick start |
+| **Production DB** | MySQL 8.0 | Used in Docker/VPS (`prod` profile) |
+| **Dev DB (profile `dev`)** | H2 in-memory | Default for local quick start — no MySQL install |
+| **Local MySQL (optional)** | MySQL 8.0 | Default profile without `dev` — see [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) |
 | **ORM** | Hibernate via Spring Data JPA | Entity mapping, DDL auto-update |
 | **ID strategy** | `GenerationType.IDENTITY` | Auto-increment BIGINT primary keys |
 | **Timestamps** | `LocalDateTime` + `@PrePersist` / `@PreUpdate` | Automatic created/updated times |
@@ -46,13 +47,21 @@ $env:SPRING_PROFILES_ACTIVE="dev"
 H2 console: `http://localhost:8080/h2-console`  
 JDBC: `jdbc:h2:mem:blogdb` · user: `sa` · password: (empty)
 
-### Local development (MySQL)
+### Local development (MySQL — optional)
+
+Only needed if you **do not** use the `dev` profile and want to test against real MySQL.
 
 ```sql
 CREATE DATABASE blogdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Configure `application.properties` (gitignored) with localhost credentials.
+Default credentials are in `src/main/resources/application.properties` (`root` / `root` — change locally if needed). Start backend **without** `dev` profile:
+
+```bash
+mvn spring-boot:run
+```
+
+See [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) for IDE setup.
 
 ### Production (Docker)
 
@@ -395,4 +404,4 @@ SELECT username, role FROM users;
 3. Update **DTO** + **Service** mapper + **frontend** if exposed in API
 4. For production at scale → add Flyway migration instead of relying on `update`
 
-See also: [BACKEND.md](./BACKEND.md) · [ARCHITECTURE.md](./ARCHITECTURE.md) · [VPS_DOCKER_DEPLOYMENT.md](../VPS_DOCKER_DEPLOYMENT.md)
+See also: [BACKEND.md](./BACKEND.md) · [ARCHITECTURE.md](./ARCHITECTURE.md) · [ENVIRONMENTS.md](./ENVIRONMENTS.md) · [DEPLOYMENT.md](./DEPLOYMENT.md)

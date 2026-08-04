@@ -2,50 +2,90 @@
 
 > **LIVE LIKE A DREAM LAD**
 
-Full-stack blog platform — Spring Boot backend, React frontend, MySQL database.
+Full-stack blog platform — Spring Boot backend, React frontend, MySQL in staging/production.
 
 ---
 
 ## Documentation
 
+All docs are in **[docs/](./docs/README.md)**.
+
 | Doc | What's inside |
 |-----|----------------|
-| [**Architecture**](./docs/ARCHITECTURE.md) | How frontend, backend, and DB connect; deployment diagram |
-| [**Backend**](./docs/BACKEND.md) | Spring Boot layers, patterns, security, API reference |
-| [**Frontend**](./docs/FRONTEND.md) | React routes, components, Context, API usage, user flows |
-| [**Database**](./docs/DATABASE.md) | MySQL schema, tables, relationships, seed data |
-| [**VPS Docker Deploy**](./VPS_DOCKER_DEPLOYMENT.md) | Production: Docker + Nginx + Let's Encrypt + GoDaddy |
-| [**Cloudflare**](./CLOUDFLARE.md) | CDN/WAF in front of VPS: SSL mode, cache rules, real IP |
+| [**Docs index**](./docs/README.md) | Full list and read order |
+| [**Environments**](./docs/ENVIRONMENTS.md) | **Dev, staging, production** — profiles, MySQL, Docker |
+| [**Architecture**](./docs/ARCHITECTURE.md) | How frontend, backend, and DB connect |
+| [**Local development**](./docs/LOCAL_DEVELOPMENT.md) | IntelliJ + VS Code, run locally (H2) |
+| [**Deployment**](./docs/DEPLOYMENT.md) | Contabo VPS + Docker + Nginx + Let's Encrypt |
+| [**Cloudflare**](./docs/CLOUDFLARE.md) | CDN/WAF in front of VPS |
+| [**Backend**](./docs/BACKEND.md) | Spring Boot layers, patterns, API |
+| [**Frontend**](./docs/FRONTEND.md) | React routes, components, flows |
+| [**Database**](./docs/DATABASE.md) | MySQL schema, tables, relationships |
 
-Start with **Architecture** if you're new to the project.
+**New to the project?** Read [Architecture](./docs/ARCHITECTURE.md) → [Environments](./docs/ENVIRONMENTS.md).
 
 ---
 
-## Quick start (local)
+## Quick start (local dev)
 
-### Backend (H2 — no MySQL install)
-
-```powershell
-.\mvnw.cmd spring-boot:run -Dspring-boot.run.arguments=--spring.profiles.active=dev
-```
-
-Runs at `http://localhost:8080`
-
-### Frontend
+Requires **JDK 17** and **Node 18+**. Uses **H2** (no MySQL install).
 
 ```powershell
+# Backend (Windows)
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.arguments=--spring.profiles.active=dev"
+
+# Frontend
 cd frontend
 npm install
 npm start
 ```
 
-Runs at `http://localhost:3000`
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend | http://localhost:8080 |
+| Login | `admin` / `Admin123!@` |
 
-### Login
+IDE setup: [docs/LOCAL_DEVELOPMENT.md](./docs/LOCAL_DEVELOPMENT.md)
 
-| User | Password |
-|------|----------|
-| admin | `Admin123!@` |
+---
+
+## Environments at a glance
+
+| Environment | Profile | Database | Where |
+|-------------|---------|----------|-------|
+| **Development** | `dev` | H2 in-memory | Local machine |
+| **Staging** | `staging` | MySQL (Docker) | Contabo VPS |
+| **Production** | `prod` | MySQL (Docker) | Contabo VPS + Cloudflare |
+
+Details: [docs/ENVIRONMENTS.md](./docs/ENVIRONMENTS.md)
+
+---
+
+## Production deploy (Contabo)
+
+```bash
+git clone https://github.com/lladlad1912/lladladprod.git
+cd lladladprod/docker
+cp .env.example .env && nano .env
+chmod +x scripts/*.sh && ./scripts/deploy.sh
+```
+
+Full guide: [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md)
+
+---
+
+## Repository layout
+
+```
+BlogApp/
+├── README.md
+├── pom.xml / mvnw.cmd     # Backend (Maven)
+├── src/                   # Spring Boot
+├── frontend/              # React
+├── docker/                # Compose, Nginx, deploy scripts, .env examples
+└── docs/                  # All documentation
+```
 
 ---
 
@@ -54,35 +94,9 @@ Runs at `http://localhost:3000`
 | Layer | Technology |
 |-------|------------|
 | Backend | Java 17, Spring Boot 3.2, Spring Security, JWT |
-| Frontend | React 18, React Router, Axios, Context API |
-| Database | MySQL 8 (production), H2 (dev) |
-| Deploy | Docker Compose, Nginx, Let's Encrypt |
-
----
-
-## Project structure
-
-```
-BlogApp/
-├── src/main/java/com/blogapp/   # Backend (controllers, services, models)
-├── frontend/src/                # React app
-├── docker/                      # Docker Compose, Nginx, deploy scripts
-├── docs/                        # Technical documentation
-├── netlify.toml                 # Optional Netlify frontend-only deploy
-└── pom.xml
-```
-
----
-
-## Production
-
-Recommended: **single VPS with Docker** — see [VPS_DOCKER_DEPLOYMENT.md](./VPS_DOCKER_DEPLOYMENT.md).
-
-```
-https://www.yourdomain.com      → React (Nginx)
-https://www.yourdomain.com/api  → Spring Boot
-MySQL container                 → persistent volume
-```
+| Frontend | React 18, React Router, Axios |
+| Database | H2 (dev), MySQL 8 (staging/prod) |
+| Deploy | Docker Compose, Nginx, Let's Encrypt, Cloudflare |
 
 ---
 

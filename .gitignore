@@ -50,10 +50,15 @@ frontend/.pnp.js
 .env.test.local
 .env.production.local
 docker/.env
+docker/.env.staging
 
-# Application properties with sensitive data
+# Eclipse / IDE metadata
+.metadata/
+.factorypath
 src/main/resources/application.properties
 !src/main/resources/application-dev.properties
+!src/main/resources/application-staging.properties
+!src/main/resources/application-prod.properties
 
 # H2 Database files
 *.mv.db

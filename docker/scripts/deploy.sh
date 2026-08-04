@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd "$(dirname "$0")"
+cd "$(dirname "$0")/.."
 
 if [[ ! -f .env ]]; then
   echo "Create docker/.env from docker/.env.example first."
@@ -22,9 +22,9 @@ else
   sed -e "s/YOUR_DOMAIN/${DOMAIN}/g" nginx/templates/bootstrap.conf.template > nginx/conf.d/app.conf
 fi
 
-echo "Building and starting containers..."
-docker compose up -d --build
+echo "Building and starting PRODUCTION containers (project: ${COMPOSE_PROJECT_NAME:-lladlad-prod})..."
+docker compose --env-file .env up -d --build
 
 echo ""
-echo "Done. Test: http://${DOMAIN}/ (or http://YOUR_VPS_IP if DNS not ready yet)"
-echo "When DNS points to this server, run: ./scripts/init-letsencrypt.sh"
+echo "Done. Test: http://${DOMAIN}/"
+echo "When DNS points to this server, run: ./scripts/init-letsencrypt.sh .env"

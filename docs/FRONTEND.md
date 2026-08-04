@@ -13,11 +13,12 @@ Source root: `frontend/src/`
 3. [Routing](#3-routing)
 4. [State management](#4-state-management)
 5. [API layer](#5-api-layer)
-6. [Configuration and environment](#6-configuration-and-environment)
-7. [Components reference](#7-components-reference)
-8. [Key user flows](#8-key-user-flows)
-9. [Styling and layout](#9-styling-and-layout)
-10. [Making changes safely](#10-making-changes-safely)
+6. [Local development (IDE)](#6-local-development-ide)
+7. [Configuration and environment](#7-configuration-and-environment)
+8. [Components reference](#8-components-reference)
+9. [Key user flows](#9-key-user-flows)
+10. [Styling and layout](#10-styling-and-layout)
+11. [Making changes safely](#11-making-changes-safely)
 
 ---
 
@@ -186,7 +187,26 @@ const api = axios.create({ baseURL: API_BASE_URL });
 
 ---
 
-## 6. Configuration and environment
+## 6. Local development (IDE)
+
+Recommended IDE: **VS Code** or **WebStorm** (see [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md)).
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+- Dev server: http://localhost:3000  
+- API defaults to http://localhost:8080 (backend must be running with `dev` profile)  
+- No `.env` file needed for local work
+
+**VS Code:** open the `frontend/` folder, use integrated terminal for `npm start`.  
+**WebStorm:** open `frontend/`, run the `start` script from the npm tool window.
+
+---
+
+## 7. Configuration and environment
 
 File: `config.js`
 
@@ -209,7 +229,7 @@ export function resolveUploadUrl(urlOrPath) { ... }
 
 ---
 
-## 7. Components reference
+## 8. Components reference
 
 ### Pages
 
@@ -250,7 +270,7 @@ export function resolveUploadUrl(urlOrPath) { ... }
 
 ---
 
-## 8. Key user flows
+## 9. Key user flows
 
 ### Login (password)
 
@@ -300,7 +320,7 @@ Guest clicks bookmark → login prompt
 
 ---
 
-## 9. Styling and layout
+## 10. Styling and layout
 
 - **Global CSS:** `App.css` — navbar, magazine grid, cards, forms
 - **Layout class:** `magazine-layout` — sidebar overlay + main content
@@ -311,7 +331,7 @@ No CSS framework (Bootstrap/Tailwind) — custom CSS for full control.
 
 ---
 
-## 10. Making changes safely
+## 11. Making changes safely
 
 | Task | Files to touch |
 |------|----------------|

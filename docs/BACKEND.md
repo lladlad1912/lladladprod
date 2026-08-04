@@ -336,9 +336,11 @@ Returns **429** with `X-RateLimit-*` headers.
 
 | Profile | Database | When |
 |---------|----------|------|
-| default | MySQL localhost | Local with MySQL |
-| `dev` | H2 in-memory | Local quick start |
-| `prod` | MySQL via env vars | Docker / VPS |
+| `dev` | H2 in-memory | **Recommended local** — no MySQL install |
+| `staging` | MySQL via env vars | Docker staging stack on VPS |
+| `prod` | MySQL via env vars | Docker production on VPS |
+
+See [ENVIRONMENTS.md](./ENVIRONMENTS.md) for dev / staging / prod setup.
 
 Key production env vars:
 
