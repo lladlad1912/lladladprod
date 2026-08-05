@@ -130,6 +130,26 @@ Both **staging** and **prod** read database and secrets from environment variabl
 
 ---
 
+## Git branches
+
+| Branch | Environment | Deploy target |
+|--------|-------------|---------------|
+| **`dev`** | Local development | Your machine (IntelliJ, H2) |
+| **`staging`** | Staging VPS | `docker/.env.staging` → `./scripts/deploy-staging.sh` |
+| **`main`** | Production | `docker/.env` → `./scripts/deploy.sh` |
+
+**Workflow:**
+
+```
+dev  →  merge to staging  →  test on staging.yourdomain.com  →  merge to main  →  production
+```
+
+All three branches start with the same code. Only merge **staging → main** after testing on the staging server.
+
+**Empty staging database?** Normal on first deploy. Spring Boot `DataInitializer` seeds categories, users, and sample posts when the staging backend starts against an empty MySQL volume.
+
+---
+
 ## Frontend environment variables
 
 React env vars are **baked in at build time** (Docker nginx build or `npm run build`).
