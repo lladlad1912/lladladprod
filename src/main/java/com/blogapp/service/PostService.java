@@ -113,12 +113,16 @@ public class PostService {
     public PostDTO getPostById(Long id) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));
+        assertCanViewPost(post, null);
         return convertToDTO(post);
     }
     
-    public PostDTO getPostById(Long id, Long userId) {
+    public PostDTO getPostById(Long id, String currentUsername, Long userId) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));
+
+        assertCanViewPost(post,currentUsername);
+
         PostDTO dto = convertToDTO(post);
         if (userId != null) {
             dto.setLiked(postLikeService.isLiked(id, userId));
@@ -327,6 +331,10 @@ public class PostService {
         if (postDetails.getMetaKeywords() != null) {
             post.setMetaKeywords(postDetails.getMetaKeywords());
         }
+
+        if(postDetails.getStatus()!= null){
+            post.setStatus(postDetails.getStatus());
+        }
         
         if (postDetails.getCategory() != null) {
             Category category = categoryRepository.findById(postDetails.getCategory().getId())
@@ -398,6 +406,30 @@ public class PostService {
         dto.setMetaKeywords(post.getMetaKeywords());
         dto.setStatus(post.getStatus() != null ? post.getStatus() : "PUBLISHED");
         return dto;
+    }
+
+    private void assertCanViewPost(Post post, String currentUsername){
+        String status = post.getStatus() != null ? post.getStatus() : "PUBLISHED";
+
+        //Published posts are public
+        if("PUBLISHED".equals(status)){
+            return;
+        }
+
+        //Not logged in - hide non-published posts
+        if(currentUsername == null){
+            throw new RuntimeException("Post not found with id: "+post.getId());
+        }
+
+        User currentUser = userRepository.findByUsername(currentUsername).orElseThrow(()-> new RuntimeException("User not found"));
+
+        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
+        boolean isOwner = post.getAuthor().getId().equals(currentUser.getId());
+
+        // draft only for admin or the author
+        if("DRAFT".equals(status) && !isOwner && !isAdmin){
+            throw new RuntimeException("Post not found with id: "+ post.getId());
+        }
     }
     
     public void incrementViewCount(Long postId) {

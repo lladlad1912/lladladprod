@@ -70,10 +70,17 @@ public class PostController {
             @PathVariable Long id,
             @RequestParam(required = false) Long userId) {
         try {
-            PostDTO post = userId != null 
-                    ? postService.getPostById(id, userId)
-                    : postService.getPostById(id);
-            return ResponseEntity.ok(post);
+
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String currentUsername = null;
+
+            if(authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())){
+                currentUsername= authentication.getName();
+            }
+
+                PostDTO post = postService.getPostById(id, currentUsername, userId);
+                return ResponseEntity.ok(post);
+
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
@@ -132,6 +139,9 @@ public class PostController {
             if (request.containsKey("metaKeywords")) {
                 post.setMetaKeywords((String) request.get("metaKeywords"));
             }
+            if(request.containsKey("status")){
+                post.setStatus((String) request.get("status")) ;
+            }
             
             Long userId = Long.valueOf(request.get("userId").toString());
             Long categoryId = Long.valueOf(request.get("categoryId").toString());
@@ -173,6 +183,11 @@ public class PostController {
             if (request.containsKey("metaKeywords")) {
                 postDetails.setMetaKeywords((String) request.get("metaKeywords"));
             }
+
+            if(request.containsKey("status")){
+                postDetails.setStatus((String) request.get("status"));
+            }
+
             if (request.containsKey("categoryId")) {
                 com.blogapp.model.Category category = new com.blogapp.model.Category();
                 category.setId(Long.valueOf(request.get("categoryId").toString()));
