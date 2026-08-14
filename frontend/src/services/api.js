@@ -76,6 +76,7 @@ export const deleteSubmission = (id) => api.delete(`/contact/submissions/${id}`)
 export const createPost = (postData) => api.post('/posts', postData);
 export const updatePost = (id, postData) => api.put(`/posts/${id}`, postData);
 export const deletePost = (id) => api.delete(`/posts/${id}`);
+export const getMyDrafts = () => api.get('/posts/drafts');
 export const getPostsByCategory = (categoryId) => api.get(`/posts/category/${categoryId}`);
 export const getPostsByUser = (userId) => api.get(`/posts/user/${userId}`);
 export const getPendingReviewPosts = () => api.get('/posts/pending-review');

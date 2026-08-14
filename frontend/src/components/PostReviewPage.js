@@ -192,6 +192,7 @@ function PostReviewPage() {
                     }}
                   >
                     <option value="PENDING_REVIEW">Pending Review</option>
+                    <option value="DRAFT">Drafts</option>
                     <option value="PUBLISHED">Published</option>
                     <option value="REJECTED">Rejected</option>
                     <option value="ALL">All Statuses</option>
@@ -468,6 +469,31 @@ function PostReviewPage() {
                                 }}
                               >
                                 View Post
+                              </Link>
+                            </div>
+                          )}
+
+                          {post.status === 'DRAFT' && (
+                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                              <Link
+                                to={`/posts/${post.id}/edit`}
+                                className="btn btn-primary"
+                                style={{ textDecoration: 'none' }}
+                              >
+                                Continue editing
+                              </Link>
+                              <Link
+                                to={`/posts/${post.id}`}
+                                target="_blank"
+                                className="btn"
+                                style={{
+                                  backgroundColor: '#3b82f6',
+                                  borderColor: '#3b82f6',
+                                  color: 'white',
+                                  textDecoration: 'none'
+                                }}
+                              >
+                                Preview
                               </Link>
                             </div>
                           )}

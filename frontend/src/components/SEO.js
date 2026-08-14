@@ -17,7 +17,8 @@ function SEO({
   publishedTime,
   modifiedTime,
   articleSection,
-  tags
+  tags,
+  robots = 'index, follow'
 }) {
   const location = useLocation();
   const siteUrl = SITE_URL;
@@ -89,14 +90,14 @@ function SEO({
     updateMetaTag('twitter:image', ogImage);
     
     // Additional SEO tags
-    updateMetaTag('robots', 'index, follow');
-    updateMetaTag('googlebot', 'index, follow');
+    updateMetaTag('robots', robots);
+    updateMetaTag('googlebot', robots);
     
     // Cleanup function
     return () => {
       // Optionally reset to defaults on unmount
     };
-  }, [title, description, keywords, image, url, type, author, publishedTime, modifiedTime, articleSection, tags, canonicalUrl, ogImage, fullTitle, metaDescription, siteName]);
+  }, [title, description, keywords, image, url, type, author, publishedTime, modifiedTime, articleSection, tags, canonicalUrl, ogImage, fullTitle, metaDescription, siteName, robots]);
 
   return null; // This component doesn't render anything
 }
