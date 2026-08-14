@@ -64,6 +64,19 @@ public class PostController {
         PageResponse<PostDTO> posts = postService.searchPosts(keyword, categoryId, page, size);
         return ResponseEntity.ok(posts);
     }
+
+    @GetMapping("/drafts")
+    public ResponseEntity<?> getMyDrafts(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Not authenticated");
+        }
+        try {
+            return ResponseEntity.ok(postService.getDraftsByUsername(authentication.getName()));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
     
     @GetMapping("/{id}")
     public ResponseEntity<PostDTO> getPostById(
@@ -107,12 +120,18 @@ public class PostController {
     public ResponseEntity<?> getPostsByUser(
             @PathVariable Long userId,
             @RequestParam(required = false) Integer page,
-            @RequestParam(required = false) Integer size) {
+            @RequestParam(required = false) Integer size,
+            Authentication authentication) {
+        String currentUsername = null;
+        if (authentication != null && authentication.isAuthenticated()
+                && !"anonymousUser".equals(authentication.getName())) {
+            currentUsername = authentication.getName();
+        }
         if (page != null && size != null) {
-            PageResponse<PostDTO> posts = postService.getPostsByUser(userId, page, size);
+            PageResponse<PostDTO> posts = postService.getPostsByUser(userId, page, size, currentUsername);
             return ResponseEntity.ok(posts);
         } else {
-            List<PostDTO> posts = postService.getPostsByUser(userId);
+            List<PostDTO> posts = postService.getPostsByUser(userId, currentUsername);
             return ResponseEntity.ok(posts);
         }
     }
@@ -276,8 +295,8 @@ public class PostController {
     @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR')")
     public ResponseEntity<?> getPostsForReview() {
         try {
-            // Return all posts for admin/editor to review (all statuses)
-            List<PostDTO> posts = postService.getAllPosts("ADMIN");
+            // Return all posts for admin/editor to review, including drafts
+            List<PostDTO> posts = postService.getAllPosts();
             return ResponseEntity.ok(posts);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
