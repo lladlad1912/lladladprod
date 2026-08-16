@@ -52,6 +52,12 @@ function PostForm() {
   const loadPost = async () => {
     try {
       setLoadingPost(true);
+      setError(null);
+      setSuccess(null);
+      if (!id || Number.isNaN(Number(id))) {
+        setError('Failed to load post');
+        return;
+      }
       const response = await getPost(id);
       const post = response.data;
       
@@ -245,9 +251,7 @@ function PostForm() {
         setSuccess('Draft saved.');
         const draftId = response.data?.id;
         if (draftId) {
-          setTimeout(() => {
-            navigate(`/posts/${draftId}/edit`, { replace: true });
-          }, 600);
+          navigate(`/posts/${draftId}/edit`, { replace: true });
         }
       }
     } catch (err) {
