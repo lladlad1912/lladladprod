@@ -8,6 +8,7 @@ import com.blogapp.repository.CategoryRepository;
 import com.blogapp.repository.PostRepository;
 import com.blogapp.repository.SiteSettingsRepository;
 import com.blogapp.repository.UserRepository;
+import com.blogapp.util.SlugUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -49,6 +50,8 @@ public class DataInitializer implements CommandLineRunner {
         
         // Update existing posts with NULL status to PUBLISHED
         updatePostsStatus();
+
+        backfillSlugs();
     }
     
     private void updatePostsStatus() {
@@ -65,6 +68,55 @@ public class DataInitializer implements CommandLineRunner {
         if (updated) {
             System.out.println("Updated existing posts with NULL status to PUBLISHED");
         }
+    }
+
+    private void backfillSlugs() {
+        for (Category category : categoryRepository.findAll()) {
+            if (category.getSlug() == null || category.getSlug().isBlank()) {
+                category.setSlug(uniqueCategorySlug(category.getName(), category.getId()));
+                categoryRepository.save(category);
+            }
+        }
+        for (Post post : postRepository.findAll()) {
+            if (post.getSlug() == null || post.getSlug().isBlank()) {
+                post.setSlug(uniquePostSlug(post.getTitle(), post.getId()));
+                postRepository.save(post);
+            }
+        }
+    }
+
+    private String uniquePostSlug(String title, Long excludeId) {
+        String base = SlugUtils.slugify(title, "post");
+        String candidate = base;
+        int suffix = 2;
+        while (isPostSlugTaken(candidate, excludeId)) {
+            candidate = base + "-" + suffix;
+            suffix++;
+        }
+        return candidate;
+    }
+
+    private boolean isPostSlugTaken(String slug, Long excludeId) {
+        return postRepository.findBySlug(slug)
+                .map(existing -> excludeId == null || !existing.getId().equals(excludeId))
+                .orElse(false);
+    }
+
+    private String uniqueCategorySlug(String name, Long excludeId) {
+        String base = SlugUtils.slugify(name, "category");
+        String candidate = base;
+        int suffix = 2;
+        while (isCategorySlugTaken(candidate, excludeId)) {
+            candidate = base + "-" + suffix;
+            suffix++;
+        }
+        return candidate;
+    }
+
+    private boolean isCategorySlugTaken(String slug, Long excludeId) {
+        return categoryRepository.findBySlug(slug)
+                .map(existing -> excludeId == null || !existing.getId().equals(excludeId))
+                .orElse(false);
     }
     
     private void initializeSiteSettings() {
@@ -153,6 +205,7 @@ public class DataInitializer implements CommandLineRunner {
                     newCategory.setName(categoryName);
                     newCategory.setDescription(description);
                     newCategory.setShowInHeader(true);
+                    newCategory.setSlug(uniqueCategorySlug(categoryName, null));
                     categoryRepository.save(newCategory);
                 }
             );

@@ -5,6 +5,7 @@ import { useSidebar } from '../context/SidebarContext';
 import { getPostsForReview, approvePost, rejectPost } from '../services/api';
 import Sidebar from './Sidebar';
 import { uploadUrl } from '../config';
+import { postPath } from '../utils/urls';
 import '../App.css';
 
 function PostReviewPage() {
@@ -336,7 +337,7 @@ function PostReviewPage() {
                             <div style={{ flex: '1' }}>
                               <h2 style={{ margin: '0 0 0.5rem 0', color: '#1e293b', fontSize: '1.5rem' }}>
                                 <Link 
-                                  to={`/posts/${post.id}`}
+                                  to={postPath(post)}
                                   style={{ color: 'inherit', textDecoration: 'none' }}
                                   target="_blank"
                                 >
@@ -426,7 +427,7 @@ function PostReviewPage() {
                                 {processingPost === post.id ? 'Processing...' : '✗ Reject'}
                               </button>
                               <Link
-                                to={`/posts/${post.id}`}
+                                to={postPath(post)}
                                 target="_blank"
                                 className="btn"
                                 style={{
@@ -457,7 +458,7 @@ function PostReviewPage() {
                                 {processingPost === post.id ? 'Processing...' : '✓ Approve'}
                               </button>
                               <Link
-                                to={`/posts/${post.id}`}
+                                to={postPath(post)}
                                 target="_blank"
                                 className="btn"
                                 style={{
@@ -475,7 +476,7 @@ function PostReviewPage() {
                           {post.status === 'PUBLISHED' && (
                             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
                               <Link
-                                to={`/posts/${post.id}`}
+                                to={postPath(post)}
                                 target="_blank"
                                 className="btn btn-primary"
                                 style={{

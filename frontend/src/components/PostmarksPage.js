@@ -5,6 +5,7 @@ import { useSidebar } from '../context/SidebarContext';
 import { getUserBookmarks } from '../services/api';
 import Sidebar from './Sidebar';
 import { uploadUrl } from '../config';
+import { postPath } from '../utils/urls';
 import '../App.css';
 
 function PostmarksPage() {
@@ -172,7 +173,7 @@ function PostmarksPage() {
                   {filteredBookmarks.map((bookmark) => (
                     <Link
                       key={bookmark.id}
-                      to={`/posts/${bookmark.postId}`}
+                      to={postPath({ id: bookmark.postId, slug: bookmark.postSlug })}
                       className="card"
                       style={{
                         textDecoration: 'none',

@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 public class BookmarkDTO {
     private Long id;
     private Long postId;
+    private String postSlug;
     private String postTitle;
     private String postImagePath;
     private String postCategoryName;

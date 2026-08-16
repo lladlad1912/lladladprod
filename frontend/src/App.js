@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SidebarProvider, useSidebar } from './context/SidebarContext';
 import { getTotalSiteViews, getCategories, getSubCategoriesByCategory, searchPosts, searchAll } from './services/api';
+import { categoryPath } from './utils/urls';
 import './App.css';
 import PostList from './components/PostList';
 import MagazinePostList from './components/MagazinePostList';
@@ -26,6 +27,7 @@ import ProfileSetup from './components/ProfileSetup';
 import PostReviewPage from './components/PostReviewPage';
 import SEO from './components/SEO';
 import ProductsPage from './components/ProductsPage';
+import SitemapPage from './components/SitemapPage';
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -195,7 +197,7 @@ function Navbar() {
                 </button>
                 <button 
                   onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                  className="nav-search-icon-button"
+                  className="nav-search-icon-button nav-filter-standalone"
                   title="Filter"
                   style={{ position: 'relative' }}
                 >
@@ -406,7 +408,7 @@ function Navbar() {
                     onMouseLeave={() => setHoveredCategory(null)}
                   >
                     <Link 
-                      to={`/?category=${category.name}`}
+                      to={categoryPath(category)}
                       className="nav-category-link"
                     >
                       {category.name}
@@ -416,7 +418,7 @@ function Navbar() {
                         {subCategories.map((subCategory) => (
                           <Link
                             key={subCategory.id}
-                            to={`/?category=${category.name}&subcategory=${subCategory.name}`}
+                            to={`${categoryPath(category)}?subcategory=${encodeURIComponent(subCategory.name)}`}
                             className="nav-subcategory-link"
                             onClick={() => setHoveredCategory(null)}
                           >
@@ -436,7 +438,7 @@ function Navbar() {
             <span className="nav-hits-text">{totalViews.toLocaleString()}</span>
           </div>
           {user ? (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem' }}>
+            <div className="nav-auth">
               <button 
                 onClick={handleLogout}
                 className="nav-link"
@@ -444,10 +446,10 @@ function Navbar() {
               >
                 Logout
               </button>
-              <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.8)' }}>{user.username}</span>
+              <span className="nav-username">{user.username}</span>
             </div>
           ) : (
-            <Link to="/login" className="nav-link">Login</Link>
+            <Link to="/login" className="nav-link nav-auth">Login</Link>
           )}
         </div>
       </div>
@@ -462,6 +464,8 @@ function AppContent() {
       <main className="main-content">
         <Routes>
           <Route path="/" element={<MagazinePostList />} />
+          <Route path="/category/:categorySlug" element={<MagazinePostList />} />
+          <Route path="/sitemap" element={<SitemapPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route 

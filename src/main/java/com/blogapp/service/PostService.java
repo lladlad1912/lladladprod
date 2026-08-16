@@ -9,6 +9,7 @@ import com.blogapp.repository.CategoryRepository;
 import com.blogapp.repository.PostRepository;
 import com.blogapp.repository.SubCategoryRepository;
 import com.blogapp.repository.UserRepository;
+import com.blogapp.util.SlugUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -21,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -120,14 +122,32 @@ public class PostService {
     public PostDTO getPostById(Long id, String currentUsername, Long userId) {
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Post not found with id: " + id));
+        return toViewableDto(post, currentUsername, userId);
+    }
 
-        assertCanViewPost(post,currentUsername);
+    public PostDTO getPostByIdOrSlug(String idOrSlug, String currentUsername, Long userId) {
+        Post post = findPostByIdOrSlug(idOrSlug);
+        return toViewableDto(post, currentUsername, userId);
+    }
 
+    private PostDTO toViewableDto(Post post, String currentUsername, Long userId) {
+        assertCanViewPost(post, currentUsername);
         PostDTO dto = convertToDTO(post);
         if (userId != null) {
-            dto.setLiked(postLikeService.isLiked(id, userId));
+            dto.setLiked(postLikeService.isLiked(post.getId(), userId));
         }
         return dto;
+    }
+
+    private Post findPostByIdOrSlug(String idOrSlug) {
+        if (idOrSlug != null && idOrSlug.matches("\\d+")) {
+            Optional<Post> byId = postRepository.findById(Long.parseLong(idOrSlug));
+            if (byId.isPresent()) {
+                return byId.get();
+            }
+        }
+        return postRepository.findBySlug(idOrSlug)
+                .orElseThrow(() -> new RuntimeException("Post not found: " + idOrSlug));
     }
     
     public List<PostDTO> getPostsByCategory(Long categoryId) {
@@ -278,6 +298,10 @@ public class PostService {
                 post.setStatus("PENDING_REVIEW");
             }
         }
+
+        if (post.getSlug() == null || post.getSlug().isBlank()) {
+            post.setSlug(uniquePostSlug(post.getTitle(), null));
+        }
         
         Post savedPost = postRepository.save(post);
         return convertToDTO(savedPost);
@@ -302,6 +326,9 @@ public class PostService {
         
         if (postDetails.getTitle() != null) {
             post.setTitle(postDetails.getTitle());
+        }
+        if (post.getSlug() == null || post.getSlug().isBlank()) {
+            post.setSlug(uniquePostSlug(post.getTitle(), post.getId()));
         }
         
         if (postDetails.getContent() != null) {
@@ -381,6 +408,7 @@ public class PostService {
     private PostDTO convertToDTO(Post post) {
         PostDTO dto = new PostDTO();
         dto.setId(post.getId());
+        dto.setSlug(post.getSlug());
         dto.setTitle(post.getTitle());
         dto.setContent(post.getContent());
         dto.setYoutubeUrl(post.getYoutubeUrl());
@@ -393,6 +421,7 @@ public class PostService {
         dto.setAuthorUsername(post.getAuthor().getUsername());
         dto.setCategoryId(post.getCategory().getId());
         dto.setCategoryName(post.getCategory().getName());
+        dto.setCategorySlug(post.getCategory().getSlug());
         if (post.getSubCategory() != null) {
             dto.setSubCategoryId(post.getSubCategory().getId());
             dto.setSubCategoryName(post.getSubCategory().getName());
@@ -469,6 +498,24 @@ public class PostService {
         return postRepository.findByStatus(status).stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    public String uniquePostSlug(String title, Long excludeId) {
+        String base = SlugUtils.slugify(title, "post");
+        String candidate = base;
+        int suffix = 2;
+        while (slugTaken(candidate, excludeId)) {
+            candidate = base + "-" + suffix;
+            suffix++;
+        }
+        return candidate;
+    }
+
+    private boolean slugTaken(String slug, Long excludeId) {
+        if (excludeId == null) {
+            return postRepository.existsBySlug(slug);
+        }
+        return postRepository.existsBySlugAndIdNot(slug, excludeId);
     }
 }
 

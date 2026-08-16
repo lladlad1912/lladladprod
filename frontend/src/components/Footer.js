@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from './Logo';
-import { getAllSettings, getPosts } from '../services/api';
+import { getAllSettings, getPosts, getCategories } from '../services/api';
+import { SITEMAP_XML_URL } from '../config';
+import { categoryPath, postPath } from '../utils/urls';
 import '../App.css';
 
 function Footer() {
   const [settings, setSettings] = useState({});
   const [latestPosts, setLatestPosts] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -22,15 +25,24 @@ function Footer() {
       try {
         const response = await getPosts();
         const posts = response.data.content || response.data || [];
-        // Get latest 5 posts
         setLatestPosts(posts.slice(0, 5));
       } catch (err) {
         console.error('Failed to load latest posts:', err);
       }
     };
+
+    const loadCategories = async () => {
+      try {
+        const response = await getCategories();
+        setCategories(response.data || []);
+      } catch (err) {
+        console.error('Failed to load categories:', err);
+      }
+    };
     
     loadSettings();
     loadLatestPosts();
+    loadCategories();
   }, []);
 
   return (
@@ -53,12 +65,29 @@ function Footer() {
               {latestPosts.length > 0 ? (
                 latestPosts.map((post) => (
                   <li key={post.id}>
-                    <Link to={`/posts/${post.id}`}>{post.title}</Link>
+                    <Link to={postPath(post)}>{post.title}</Link>
                   </li>
                 ))
               ) : (
                 <li>No posts yet</li>
               )}
+            </ul>
+          </div>
+
+          <div className="footer-section">
+            <h4>Explore</h4>
+            <ul className="footer-links">
+              <li><Link to="/sitemap">Sitemap</Link></li>
+              <li>
+                <a href={SITEMAP_XML_URL} target="_blank" rel="noopener noreferrer">
+                  XML sitemap
+                </a>
+              </li>
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link to={categoryPath(category)}>{category.name}</Link>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -93,6 +122,3 @@ function Footer() {
 }
 
 export default Footer;
-
-
-

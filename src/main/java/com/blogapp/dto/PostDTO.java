@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class PostDTO {
     private Long id;
+    private String slug;
     private String title;
     private String content;
     private String youtubeUrl;
@@ -23,6 +24,7 @@ public class PostDTO {
     private String authorUsername;
     private Long categoryId;
     private String categoryName;
+    private String categorySlug;
     private Long subCategoryId;
     private String subCategoryName;
     private Long commentCount = 0L;

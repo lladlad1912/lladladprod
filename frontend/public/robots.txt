@@ -14,7 +14,8 @@ Disallow: /api/
 # Allow important pages
 Allow: /
 Allow: /posts/
-Allow: /?category=*
+Allow: /category/
+Allow: /sitemap
 
 # Sitemap location (update with your actual domain in production)
 Sitemap: http://localhost:8080/sitemap.xml

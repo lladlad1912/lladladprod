@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
@@ -9,9 +9,29 @@ import CommentSection from './CommentSection';
 import SEO from './SEO';
 import StructuredData from './StructuredData';
 import { SITE_URL, uploadUrl } from '../config';
+import { categoryPath, postPath } from '../utils/urls';
 import '../App.css';
 
-// CommentSection - no memoization to prevent typing issues
+const readProgressKey = (postId) => `lladlad-read-progress-${postId}`;
+
+function loadReadProgress(postId) {
+  if (!postId) return 0;
+  try {
+    const value = parseFloat(localStorage.getItem(readProgressKey(postId)));
+    return Number.isFinite(value) ? Math.min(100, Math.max(0, value)) : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function saveReadProgress(postId, value) {
+  if (!postId) return;
+  try {
+    localStorage.setItem(readProgressKey(postId), String(value));
+  } catch {
+    // Ignore private-mode / quota errors
+  }
+}
 
 function PostDetail() {
   const { id } = useParams();
@@ -29,46 +49,60 @@ function PostDetail() {
 
   useEffect(() => {
     loadPost();
-    
-    // Track view when post loads (only once)
-    const trackView = async () => {
-      try {
-        await incrementPostView(id, user?.id || null);
-        // Reload post to get updated view count
-        const response = await getPost(id);
-        if (response.data) {
-          setViewCount(response.data.viewCount || 0);
-        }
-      } catch (err) {
-        console.error('Failed to track view:', err);
-      }
-    };
-    trackView();
-    
-    // Set up reading progress tracker
+  }, [id, user]);
+
+  useEffect(() => {
+    if (!post?.id) return;
+
+    setReadingProgress(loadReadProgress(post.id));
+
+    if (post.slug && id !== post.slug && String(id) === String(post.id)) {
+      navigate(postPath(post), { replace: true });
+    }
+
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollableHeight = documentHeight - windowHeight;
       const progress = scrollableHeight > 0 ? (scrollTop / scrollableHeight) * 100 : 0;
-      setReadingProgress(Math.min(100, Math.max(0, progress)));
+      setReadingProgress((prev) => {
+        if (prev >= 100) {
+          saveReadProgress(post.id, 100);
+          return 100;
+        }
+        const next = Math.min(100, Math.max(0, progress));
+        const stored = Math.max(prev, next);
+        saveReadProgress(post.id, stored);
+        return stored;
+      });
     };
-    
-    window.addEventListener('scroll', handleScroll);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [id, user]);
+  }, [post, id, navigate]);
 
   const loadPost = async () => {
     try {
       setLoading(true);
-      const url = user ? `/posts/${id}?userId=${user.id}` : `/posts/${id}`;
-      const response = await getPost(id);
-      setPost(response.data);
-      setLikeCount(response.data.likeCount || 0);
-      setLiked(response.data.liked || false);
-      setViewCount(response.data.viewCount || 0);
+      const response = await getPost(id, user?.id);
+      const loaded = response.data;
+      setPost(loaded);
+      setLikeCount(loaded.likeCount || 0);
+      setLiked(loaded.liked || false);
+      setViewCount(loaded.viewCount || 0);
+      setReadingProgress(loadReadProgress(loaded.id));
       setError(null);
+
+      try {
+        await incrementPostView(loaded.id, user?.id || null);
+        const refreshed = await getPost(loaded.id);
+        if (refreshed.data) {
+          setViewCount(refreshed.data.viewCount || 0);
+        }
+      } catch (err) {
+        console.error('Failed to track view:', err);
+      }
     } catch (err) {
       setError('Failed to load post');
       console.error(err);
@@ -77,16 +111,17 @@ function PostDetail() {
     }
   };
 
+  const postId = post?.id;
+
   const handleLike = async () => {
     if (!user) {
       navigate('/login');
       return;
     }
     try {
-      const response = await toggleLike(id, user.id);
+      const response = await toggleLike(postId, user.id);
       setLiked(response.data.liked);
-      // Reload like count
-      const countRes = await getLikeCount(id);
+      const countRes = await getLikeCount(postId);
       setLikeCount(countRes.data.count);
     } catch (err) {
       console.error('Failed to toggle like:', err);
@@ -94,29 +129,28 @@ function PostDetail() {
   };
 
   const handleBookmark = async () => {
+    const bookmarkKey = post?.slug || postId || id;
     if (!user) {
-      // Store the post ID to bookmark after login
-      localStorage.setItem('pendingBookmark', id);
+      localStorage.setItem('pendingBookmark', bookmarkKey);
       navigate('/login');
       return;
     }
     try {
-      const response = await toggleBookmark(id);
+      const response = await toggleBookmark(postId);
       setBookmarked(response.data.bookmarked);
     } catch (err) {
       console.error('Failed to toggle bookmark:', err);
       if (err.response?.status === 401) {
-        localStorage.setItem('pendingBookmark', id);
+        localStorage.setItem('pendingBookmark', bookmarkKey);
         navigate('/login');
       }
     }
   };
 
-
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this post?')) {
       try {
-        await deletePost(id);
+        await deletePost(postId);
         navigate('/');
       } catch (err) {
         setError('Failed to delete post');
@@ -143,7 +177,7 @@ function PostDetail() {
   const postImage = post.imagePath 
     ? uploadUrl(post.imagePath) 
     : (post.youtubeUrl ? `https://img.youtube.com/vi/${post.youtubeVideoId || ''}/maxresdefault.jpg` : null);
-  const postUrl = `${siteUrl}/posts/${post.id}`;
+  const postUrl = `${siteUrl}${postPath(post)}`;
   const postDescription = post.metaDescription || post.content?.replace(/<[^>]*>/g, '').substring(0, 160) || 'Read this post on lladlad';
   const postKeywords = post.metaKeywords || post.hashtags || '';
   const tags = post.hashtags ? post.hashtags.split(',').map(t => t.trim()).filter(t => t) : [];
@@ -194,7 +228,7 @@ function PostDetail() {
         data={{
           items: [
             { name: 'Home', url: siteUrl },
-            { name: post.categoryName || 'Posts', url: `${siteUrl}/?category=${post.categoryName || ''}` },
+            { name: post.categoryName || 'Posts', url: `${siteUrl}${categoryPath({ slug: post.categorySlug, name: post.categoryName })}` },
             { name: post.title, url: postUrl }
           ]
         }}
@@ -223,7 +257,7 @@ function PostDetail() {
               <div className="post-detail-header-actions">
                 {(isAdmin() || (user?.id === post.authorId && (isEditor() || user?.role === 'USER'))) && (
                   <Link 
-                    to={`/posts/${id}/edit`}
+                    to={`/posts/${post.id}/edit`}
                     className="magazine-edit-btn"
                     title="Edit post"
                   >
@@ -249,7 +283,11 @@ function PostDetail() {
               
               <h1>{post.title}</h1>
               <div className="post-meta">
-                By <strong>{post.authorUsername}</strong> in <strong>{post.categoryName}</strong> • 
+                By <strong>{post.authorUsername}</strong> in{' '}
+                <Link to={categoryPath({ slug: post.categorySlug, name: post.categoryName })}>
+                  <strong>{post.categoryName}</strong>
+                </Link>
+                {' '}• 
                 Created: {new Date(post.createdAt).toLocaleString()}
                 {post.updatedAt && post.createdAt !== post.updatedAt && (
                   <> • Updated: {new Date(post.updatedAt).toLocaleString()}</>

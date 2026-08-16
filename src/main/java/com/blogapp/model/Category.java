@@ -24,6 +24,9 @@ public class Category {
     @NotBlank(message = "Category name is required")
     @Column(unique = true, nullable = false)
     private String name;
+
+    @Column(name = "slug", unique = true, length = 120)
+    private String slug;
     
     @Column(length = 500)
     private String description;

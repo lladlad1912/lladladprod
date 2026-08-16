@@ -9,9 +9,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
+    Optional<Post> findBySlug(String slug);
+    boolean existsBySlug(String slug);
+    boolean existsBySlugAndIdNot(String slug, Long id);
     List<Post> findByCategoryId(Long categoryId);
     Page<Post> findByCategoryId(Long categoryId, Pageable pageable);
     List<Post> findByAuthorId(Long authorId);

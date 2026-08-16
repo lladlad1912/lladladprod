@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams, useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSidebar } from '../context/SidebarContext';
 import { getPosts, deletePost, getCategories, getPostsByCategory, toggleLike, searchAll } from '../services/api';
@@ -8,11 +8,14 @@ import AdPlacement from './AdPlacement';
 import SEO from './SEO';
 import StructuredData from './StructuredData';
 import { SITE_URL, uploadUrl } from '../config';
+import { categoryPath, findCategory, postPath } from '../utils/urls';
 import '../App.css';
 
 function MagazinePostList() {
   const { user, isAdmin, isEditor } = useAuth();
   const { sidebarOpen, closeSidebar } = useSidebar();
+  const navigate = useNavigate();
+  const { categorySlug } = useParams();
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
   const searchParam = searchParams.get('search');
@@ -68,14 +71,23 @@ function MagazinePostList() {
   }, []);
 
   useEffect(() => {
+    if (categoryParam && !categorySlug && categories.length > 0) {
+      const category = findCategory(categories, categoryParam);
+      if (category) {
+        navigate(categoryPath(category), { replace: true });
+      }
+    }
+  }, [categoryParam, categorySlug, categories, navigate]);
+
+  useEffect(() => {
     if (searchParam) {
       loadSearchResults(searchParam, searchTypeParam);
-    } else if (categoryParam && categories.length > 0) {
-      loadPostsByCategory(categoryParam);
-    } else if (!categoryParam) {
+    } else if ((categorySlug || categoryParam) && categories.length > 0) {
+      loadPostsByCategory(categorySlug || categoryParam);
+    } else if (!categorySlug && !categoryParam) {
       loadPosts();
     }
-  }, [categoryParam, categories, searchParam, searchTypeParam]);
+  }, [categorySlug, categoryParam, categories, searchParam, searchTypeParam]);
 
   const loadCategories = async () => {
     try {
@@ -113,13 +125,10 @@ function MagazinePostList() {
     }
   };
 
-  const loadPostsByCategory = async (categoryName) => {
+  const loadPostsByCategory = async (categoryKey) => {
     try {
       setLoading(true);
-      // Find category by name (case-insensitive)
-      const category = categories.find(cat => 
-        cat.name.toLowerCase() === categoryName.toLowerCase()
-      );
+      const category = findCategory(categories, categoryKey);
       if (category) {
         const response = await getPostsByCategory(category.id);
         const categoryPosts = response.data.content || response.data;
@@ -188,8 +197,8 @@ function MagazinePostList() {
       setDisplayPosts(sortedResults);
     } else if (results === null) {
       // Clear search - show posts based on current category filter
-      if (categoryParam && categories.length > 0) {
-        loadPostsByCategory(categoryParam);
+      if (categorySlug || categoryParam) {
+        loadPostsByCategory(categorySlug || categoryParam);
       } else {
         loadPosts();
       }
@@ -229,8 +238,8 @@ function MagazinePostList() {
         return newSet;
       });
       // Reload posts to get updated like count
-      if (categoryParam && categories.length > 0) {
-        loadPostsByCategory(categoryParam);
+      if (categorySlug || categoryParam) {
+        loadPostsByCategory(categorySlug || categoryParam);
       } else {
         loadPosts();
       }
@@ -244,11 +253,13 @@ function MagazinePostList() {
   }
 
   const siteUrl = SITE_URL;
-  const categoryName = categoryParam ? categories.find(c => c.name === categoryParam)?.name : null;
+  const activeCategory = findCategory(categories, categorySlug || categoryParam);
+  const categoryName = activeCategory?.name || null;
   const pageTitle = categoryName ? `${categoryName} Posts | lladlad` : 'lladlad - Blog Posts';
   const pageDescription = categoryName 
     ? `Browse ${categoryName} posts on lladlad. Read articles, watch videos, and discover content.`
     : 'Discover articles, videos, and blog posts on lladlad. Explore categories like Movies, Tech, Dharma, Gaming, and Books.';
+  const canonicalPath = activeCategory ? categoryPath(activeCategory) : '/';
 
   return (
     <>
@@ -256,7 +267,7 @@ function MagazinePostList() {
         title={pageTitle}
         description={pageDescription}
         keywords={categoryName ? `${categoryName}, blog, articles, posts` : 'blog, articles, posts, videos, telugu content'}
-        url={`${siteUrl}${categoryParam ? `/?category=${categoryParam}` : '/'}`}
+        url={`${siteUrl}${canonicalPath}`}
       />
       <StructuredData
         type="WebSite"
@@ -349,7 +360,7 @@ function MagazinePostList() {
                     </div>
                     
                     <div className="magazine-card-image">
-                      <Link to={`/posts/${post.id}`}>
+                      <Link to={postPath(post)}>
                         {post.imagePath ? (
                           <img 
                             src={uploadUrl(post.imagePath)}
@@ -424,7 +435,12 @@ function MagazinePostList() {
                     
                     <div className="magazine-card-content">
                       <div className="magazine-card-meta">
-                        <span className="magazine-category">{post.categoryName}</span>
+                        <Link
+                          to={categoryPath({ slug: post.categorySlug, name: post.categoryName })}
+                          className="magazine-category"
+                        >
+                          {post.categoryName}
+                        </Link>
                         <span className="magazine-date">
                           {new Date(post.createdAt).toLocaleDateString('en-US', { 
                             month: 'short', 
@@ -435,7 +451,7 @@ function MagazinePostList() {
                       </div>
                       
                       <h2 className="magazine-card-title">
-                        <Link to={`/posts/${post.id}`}>
+                        <Link to={postPath(post)}>
                           {post.title}
                         </Link>
                       </h2>
@@ -449,7 +465,7 @@ function MagazinePostList() {
                       )}
                       
                       <div className="magazine-card-read-more">
-                        <Link to={`/posts/${post.id}`} className="read-more-btn">
+                        <Link to={postPath(post)} className="read-more-btn">
                           Read More
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="5" y1="12" x2="19" y2="12"></line>

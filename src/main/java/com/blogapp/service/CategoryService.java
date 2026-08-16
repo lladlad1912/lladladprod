@@ -3,6 +3,7 @@ package com.blogapp.service;
 import com.blogapp.dto.CategoryDTO;
 import com.blogapp.model.Category;
 import com.blogapp.repository.CategoryRepository;
+import com.blogapp.util.SlugUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -40,6 +41,9 @@ public class CategoryService {
         if (categoryRepository.existsByName(category.getName())) {
             throw new RuntimeException("Category name already exists");
         }
+        if (category.getSlug() == null || category.getSlug().isBlank()) {
+            category.setSlug(uniqueCategorySlug(category.getName(), null));
+        }
         Category savedCategory = categoryRepository.save(category);
         return convertToDTO(savedCategory);
     }
@@ -56,6 +60,7 @@ public class CategoryService {
                 throw new RuntimeException("Category name already exists");
             }
             category.setName(categoryDetails.getName());
+            category.setSlug(uniqueCategorySlug(categoryDetails.getName(), category.getId()));
         }
         
         if (categoryDetails.getDescription() != null) {
@@ -65,6 +70,10 @@ public class CategoryService {
         // Allow toggling whether category appears in header (only when provided)
         if (categoryDetails.getShowInHeader() != null) {
             category.setShowInHeader(categoryDetails.getShowInHeader());
+        }
+
+        if (category.getSlug() == null || category.getSlug().isBlank()) {
+            category.setSlug(uniqueCategorySlug(category.getName(), category.getId()));
         }
         
         Category updatedCategory = categoryRepository.save(category);
@@ -81,12 +90,31 @@ public class CategoryService {
     private CategoryDTO convertToDTO(Category category) {
         CategoryDTO dto = new CategoryDTO();
         dto.setId(category.getId());
+        dto.setSlug(category.getSlug());
         dto.setName(category.getName());
         dto.setDescription(category.getDescription());
         dto.setShowInHeader(Boolean.TRUE.equals(category.getShowInHeader()));
         dto.setCreatedAt(category.getCreatedAt());
         dto.setPostCount((long) category.getPosts().size());
         return dto;
+    }
+
+    public String uniqueCategorySlug(String name, Long excludeId) {
+        String base = SlugUtils.slugify(name, "category");
+        String candidate = base;
+        int suffix = 2;
+        while (slugTaken(candidate, excludeId)) {
+            candidate = base + "-" + suffix;
+            suffix++;
+        }
+        return candidate;
+    }
+
+    private boolean slugTaken(String slug, Long excludeId) {
+        if (excludeId == null) {
+            return categoryRepository.existsBySlug(slug);
+        }
+        return categoryRepository.existsBySlugAndIdNot(slug, excludeId);
     }
 }
 

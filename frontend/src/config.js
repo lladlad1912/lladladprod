@@ -3,6 +3,7 @@ const API_ROOT = (process.env.REACT_APP_API_URL || 'http://localhost:8080').repl
 export const API_BASE_URL = `${API_ROOT}/api`;
 export const UPLOADS_BASE_URL = `${API_ROOT}/uploads`;
 export const SITE_URL = process.env.REACT_APP_SITE_URL || 'http://localhost:3000';
+export const SITEMAP_XML_URL = `${API_ROOT}/sitemap.xml`;
 
 export function uploadUrl(path) {
   if (!path) return null;

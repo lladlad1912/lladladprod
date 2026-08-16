@@ -24,6 +24,9 @@ public class Post {
     @NotBlank(message = "Title is required")
     @Column(nullable = false, length = 200)
     private String title;
+
+    @Column(name = "slug", unique = true, length = 120)
+    private String slug;
     
     @Column(columnDefinition = "TEXT")
     private String content;

@@ -1,13 +1,16 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getAllSettings, updateSetting, getUserBookmarks, subscribeToNewsletter } from '../services/api';
+import { getAllSettings, updateSetting, getUserBookmarks, subscribeToNewsletter, getCategories } from '../services/api';
 import { FacebookIcon, InstagramIcon, TwitterIcon } from './SocialIcons';
 import AdPlacement from './AdPlacement';
+import { categoryPath, postPath } from '../utils/urls';
 import '../App.css';
 
 function Sidebar({ onClose }) {
-  const { user, isEditor, isAdmin, loadCurrentUser } = useAuth();
+  const { user, isEditor, isAdmin, loadCurrentUser, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [bookmarks, setBookmarks] = useState([]);
   const [loadingBookmarks, setLoadingBookmarks] = useState(false);
   const [showPostmarksSidebar, setShowPostmarksSidebar] = useState(false);
@@ -18,10 +21,12 @@ function Sidebar({ onClose }) {
   const [socialDragKey, setSocialDragKey] = useState(null);
   const [newsletterNotice, setNewsletterNotice] = useState(null);
   const [subscribing, setSubscribing] = useState(false);
+  const [categories, setCategories] = useState([]);
   const socialEditorRef = useRef(null);
 
   useEffect(() => {
     loadSettings();
+    loadCategories();
     if (user) {
       loadBookmarks();
     }
@@ -54,6 +59,21 @@ function Sidebar({ onClose }) {
     } finally {
       setLoadingBookmarks(false);
     }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const response = await getCategories();
+      setCategories(response.data || []);
+    } catch (err) {
+      console.error('Failed to load categories:', err);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    if (onClose) onClose();
+    navigate('/login');
   };
 
   const canEditSocial = isAdmin() || isEditor();
@@ -122,6 +142,45 @@ function Sidebar({ onClose }) {
 
   return (
     <aside className="sidebar">
+      <div className="sidebar-card sidebar-account">
+        {user ? (
+          <>
+            <h3>Account</h3>
+            <p className="sidebar-username">{user.username}</p>
+            <button type="button" className="btn btn-secondary" onClick={handleLogout}>
+              Logout
+            </button>
+          </>
+        ) : (
+          <>
+            <h3>Account</h3>
+            <Link to="/login" className="btn btn-primary" onClick={onClose}>
+              Login
+            </Link>
+          </>
+        )}
+      </div>
+
+      <div className="sidebar-card">
+        <h3>Categories</h3>
+        {categories.length === 0 ? (
+          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>No categories yet</p>
+        ) : (
+          <nav className="sidebar-categories" aria-label="Categories">
+            {categories.map((category) => (
+              <Link
+                key={category.id}
+                to={categoryPath(category)}
+                className={`category-link${location.pathname === categoryPath(category) ? ' active' : ''}`}
+                onClick={onClose}
+              >
+                {category.name}
+              </Link>
+            ))}
+          </nav>
+        )}
+      </div>
+
       {/* Newsletter subscribe CTA (shown until user subscribes) */}
       {user && !user.newsletterSubscribed && (
         <div className="sidebar-card">
@@ -335,7 +394,7 @@ function Sidebar({ onClose }) {
                   filtered.map((bookmark) => (
                     <Link
                       key={bookmark.id}
-                      to={`/posts/${bookmark.postId}`}
+                      to={postPath({ id: bookmark.postId, slug: bookmark.postSlug })}
                       className="sidebar-bookmark-item"
                       style={{
                         display: 'block',

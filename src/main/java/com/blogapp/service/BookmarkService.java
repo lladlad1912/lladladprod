@@ -70,6 +70,7 @@ public class BookmarkService {
         BookmarkDTO dto = new BookmarkDTO();
         dto.setId(bookmark.getId());
         dto.setPostId(post.getId());
+        dto.setPostSlug(post.getSlug());
         dto.setPostTitle(post.getTitle());
         dto.setPostImagePath(post.getImagePath());
         dto.setPostCategoryName(post.getCategory() != null ? post.getCategory().getName() : null);

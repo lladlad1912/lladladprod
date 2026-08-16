@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class CategoryDTO {
     private Long id;
+    private String slug;
     private String name;
     private String description;
     private boolean showInHeader;

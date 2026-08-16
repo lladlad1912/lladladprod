@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getPosts, deletePost, searchPosts, getCategories } from '../services/api';
 import YouTubeEmbed from './YouTubeEmbed';
+import { postPath } from '../utils/urls';
 import '../App.css';
 
 function PostList() {
@@ -142,7 +143,7 @@ function PostList() {
         posts.map((post) => (
           <div key={post.id} className="card">
             <h2>
-              <Link to={`/posts/${post.id}`} style={{ textDecoration: 'none', color: '#333' }}>
+              <Link to={postPath(post)} style={{ textDecoration: 'none', color: '#333' }}>
                 {post.title}
               </Link>
             </h2>
@@ -160,7 +161,7 @@ function PostList() {
               <YouTubeEmbed embedUrl={post.youtubeEmbedUrl} />
             )}
             <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              <Link to={`/posts/${post.id}`} className="btn btn-secondary">
+              <Link to={postPath(post)} className="btn btn-secondary">
                 Read More
               </Link>
               <span style={{ color: '#666', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

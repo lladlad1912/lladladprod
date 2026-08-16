@@ -37,7 +37,10 @@ api.interceptors.response.use(
 
 // Posts API
 export const getPosts = () => api.get('/posts');
-export const getPost = (id) => api.get(`/posts/${id}`);
+export const getPost = (id, userId) => {
+  const params = userId ? `?userId=${userId}` : '';
+  return api.get(`/posts/${id}${params}`);
+};
 export const incrementPostView = (id, userId = null) => {
   const params = userId ? `?userId=${userId}` : '';
   return api.post(`/posts/${id}/view${params}`);

@@ -65,27 +65,6 @@ public class PostController {
         return ResponseEntity.ok(posts);
     }
     
-    @GetMapping("/{id}")
-    public ResponseEntity<PostDTO> getPostById(
-            @PathVariable Long id,
-            @RequestParam(required = false) Long userId) {
-        try {
-
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            String currentUsername = null;
-
-            if(authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())){
-                currentUsername= authentication.getName();
-            }
-
-                PostDTO post = postService.getPostById(id, currentUsername, userId);
-                return ResponseEntity.ok(post);
-
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<?> getPostsByCategory(
             @PathVariable Long categoryId,
@@ -291,6 +270,25 @@ public class PostController {
             return ResponseEntity.ok(Map.of("totalViews", totalViews));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{idOrSlug}")
+    public ResponseEntity<PostDTO> getPostById(
+            @PathVariable String idOrSlug,
+            @RequestParam(required = false) Long userId) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String currentUsername = null;
+
+            if (authentication != null && authentication.isAuthenticated() && !"anonymousUser".equals(authentication.getName())) {
+                currentUsername = authentication.getName();
+            }
+
+            PostDTO post = postService.getPostByIdOrSlug(idOrSlug, currentUsername, userId);
+            return ResponseEntity.ok(post);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }
