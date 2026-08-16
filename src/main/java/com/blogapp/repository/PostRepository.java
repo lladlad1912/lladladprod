@@ -26,17 +26,37 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     
     // Search functionality
     @Query("SELECT p FROM Post p WHERE " +
-           "LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
-           "LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "(p.status IS NULL OR p.status <> 'DRAFT') AND " +
+           "(LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
+           "LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "ORDER BY p.createdAt DESC")
     Page<Post> searchPosts(@Param("keyword") String keyword, Pageable pageable);
     
     @Query("SELECT p FROM Post p WHERE " +
            "p.category.id = :categoryId AND " +
+           "(p.status IS NULL OR p.status <> 'DRAFT') AND " +
            "(LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR " +
            "LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
            "ORDER BY p.createdAt DESC")
     Page<Post> searchPostsByCategory(@Param("categoryId") Long categoryId, @Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE p.status IS NULL OR p.status <> 'DRAFT' ORDER BY p.createdAt DESC")
+    List<Post> findAllExcludingDraftsOrderByCreatedAtDesc();
+
+    @Query("SELECT p FROM Post p WHERE p.status IS NULL OR p.status <> 'DRAFT' ORDER BY p.createdAt DESC")
+    Page<Post> findAllExcludingDraftsOrderByCreatedAtDesc(Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId AND (p.status IS NULL OR p.status <> 'DRAFT') ORDER BY p.createdAt DESC")
+    List<Post> findByCategoryIdExcludingDrafts(@Param("categoryId") Long categoryId);
+
+    @Query("SELECT p FROM Post p WHERE p.category.id = :categoryId AND (p.status IS NULL OR p.status <> 'DRAFT') ORDER BY p.createdAt DESC")
+    Page<Post> findByCategoryIdExcludingDrafts(@Param("categoryId") Long categoryId, Pageable pageable);
+
+    @Query("SELECT p FROM Post p WHERE p.author.id = :authorId AND (p.status IS NULL OR p.status = 'PUBLISHED') ORDER BY p.createdAt DESC")
+    List<Post> findPublishedByAuthorId(@Param("authorId") Long authorId);
+
+    @Query("SELECT p FROM Post p WHERE p.author.id = :authorId AND (p.status IS NULL OR p.status = 'PUBLISHED') ORDER BY p.createdAt DESC")
+    Page<Post> findPublishedByAuthorId(@Param("authorId") Long authorId, Pageable pageable);
     
     // Filter by status - treat NULL as PUBLISHED for backward compatibility
     @Query("SELECT p FROM Post p WHERE (p.status = :status OR (p.status IS NULL AND :status = 'PUBLISHED')) ORDER BY p.createdAt DESC")
@@ -56,5 +76,6 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findByStatus(String status, Pageable pageable);
     List<Post> findByStatusAndAuthorId(String status, Long authorId);
     Page<Post> findByStatusAndAuthorId(String status, Long authorId, Pageable pageable);
+    List<Post> findByStatusAndAuthorIdOrderByUpdatedAtDesc(String status, Long authorId);
 }
 

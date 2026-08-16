@@ -30,21 +30,6 @@ function PostDetail() {
   useEffect(() => {
     loadPost();
     
-    // Track view when post loads (only once)
-    const trackView = async () => {
-      try {
-        await incrementPostView(id, user?.id || null);
-        // Reload post to get updated view count
-        const response = await getPost(id);
-        if (response.data) {
-          setViewCount(response.data.viewCount || 0);
-        }
-      } catch (err) {
-        console.error('Failed to track view:', err);
-      }
-    };
-    trackView();
-    
     // Set up reading progress tracker
     const handleScroll = () => {
       const windowHeight = window.innerHeight;
@@ -62,13 +47,24 @@ function PostDetail() {
   const loadPost = async () => {
     try {
       setLoading(true);
-      const url = user ? `/posts/${id}?userId=${user.id}` : `/posts/${id}`;
       const response = await getPost(id);
       setPost(response.data);
       setLikeCount(response.data.likeCount || 0);
       setLiked(response.data.liked || false);
       setViewCount(response.data.viewCount || 0);
       setError(null);
+
+      if (response.data.status !== 'DRAFT') {
+        try {
+          await incrementPostView(id, user?.id || null);
+          const refreshed = await getPost(id);
+          if (refreshed.data) {
+            setViewCount(refreshed.data.viewCount || 0);
+          }
+        } catch (err) {
+          console.error('Failed to track view:', err);
+        }
+      }
     } catch (err) {
       setError('Failed to load post');
       console.error(err);
@@ -162,6 +158,7 @@ function PostDetail() {
         modifiedTime={post.updatedAt}
         articleSection={post.categoryName}
         tags={tags}
+        robots={post.status === 'DRAFT' ? 'noindex, nofollow' : 'index, follow'}
       />
       <StructuredData
         type="Article"
@@ -217,6 +214,18 @@ function PostDetail() {
             <Link to="/" className="btn btn-back" style={{ marginBottom: '0.5rem' }}>
               ← Back to Posts
             </Link>
+
+            {post.status === 'DRAFT' && (
+              <div className="draft-banner">
+                This post is a draft. Only you and admins can see it.
+                {(isAdmin() || user?.id === post.authorId) && (
+                  <>
+                    {' '}
+                    <Link to={`/posts/${id}/edit`}>Continue editing</Link>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="card" style={{ position: 'relative' }}>
               {/* Edit/Delete buttons at top right */}

@@ -30,10 +30,13 @@ function PostForm() {
   const [subCategories, setSubCategories] = useState([]);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [postStatus, setPostStatus] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [savingDraft, setSavingDraft] = useState(false);
   const [loadingPost, setLoadingPost] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const busy = loading || savingDraft || loadingPost;
 
   useEffect(() => {
     loadCategories();
@@ -49,6 +52,12 @@ function PostForm() {
   const loadPost = async () => {
     try {
       setLoadingPost(true);
+      setError(null);
+      setSuccess(null);
+      if (!id || Number.isNaN(Number(id))) {
+        setError('Failed to load post');
+        return;
+      }
       const response = await getPost(id);
       const post = response.data;
       
@@ -64,6 +73,7 @@ function PostForm() {
         metaDescription: post.metaDescription || '',
         metaKeywords: post.metaKeywords || ''
       });
+      setPostStatus(post.status || null);
       
       // Load subcategories for the post's category
       if (post.categoryId) {
@@ -176,44 +186,112 @@ function PostForm() {
     }
   };
 
+  const isBlankHtml = (html) => {
+    const text = (html || '').replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+    return !text;
+  };
+
+  const getPublishStatus = () => (isAdmin() || isEditor() ? 'PUBLISHED' : 'PENDING_REVIEW');
+
+  const buildPostPayload = async (status) => {
+    let imagePath = formData.imagePath;
+
+    if (imageFile) {
+      const uploadResponse = await uploadImage(imageFile);
+      imagePath = uploadResponse.data.filename;
+    }
+
+    const postData = {
+      title: formData.title.trim(),
+      content: formData.content,
+      youtubeUrl: formData.youtubeUrl,
+      imagePath: imagePath,
+      categoryId: parseInt(formData.categoryId, 10),
+      hashtags: formData.hashtags,
+      metaTitle: formData.metaTitle,
+      metaDescription: formData.metaDescription,
+      metaKeywords: formData.metaKeywords,
+      status
+    };
+
+    if (formData.subCategoryId) {
+      postData.subCategoryId = parseInt(formData.subCategoryId, 10);
+    }
+
+    if (!isEditMode) {
+      postData.userId = user.id;
+    }
+
+    return postData;
+  };
+
+  const handleSaveDraft = async () => {
+    if (!formData.title.trim()) {
+      setError('Add a title before saving a draft');
+      return;
+    }
+    if (!formData.categoryId) {
+      setError('Select a category before saving a draft');
+      return;
+    }
+
+    setSavingDraft(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const postData = await buildPostPayload('DRAFT');
+      if (isEditMode) {
+        await updatePost(id, postData);
+        setPostStatus('DRAFT');
+        setSuccess('Draft saved.');
+      } else {
+        const response = await createPost(postData);
+        setPostStatus('DRAFT');
+        setSuccess('Draft saved.');
+        const draftId = response.data?.id;
+        if (draftId) {
+          navigate(`/posts/${draftId}/edit`, { replace: true });
+        }
+      }
+    } catch (err) {
+      setError(err.response?.data || 'Failed to save draft');
+      console.error(err);
+    } finally {
+      setSavingDraft(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.title.trim()) {
+      setError('Title is required');
+      return;
+    }
+    if (!formData.categoryId) {
+      setError('Category is required');
+      return;
+    }
+    if (isBlankHtml(formData.content)) {
+      setError('Add some content before publishing');
+      return;
+    }
+
     setLoading(true);
     setError(null);
     setSuccess(null);
 
     try {
-      let imagePath = formData.imagePath;
-      
-      // Upload image if selected
-      if (imageFile) {
-        const uploadResponse = await uploadImage(imageFile);
-        imagePath = uploadResponse.data.filename;
-      }
-
-      const postData = {
-        title: formData.title,
-        content: formData.content,
-        youtubeUrl: formData.youtubeUrl,
-        imagePath: imagePath,
-        categoryId: parseInt(formData.categoryId),
-        hashtags: formData.hashtags,
-        metaTitle: formData.metaTitle,
-        metaDescription: formData.metaDescription,
-        metaKeywords: formData.metaKeywords
-      };
-      
-      if (formData.subCategoryId) {
-        postData.subCategoryId = parseInt(formData.subCategoryId);
-      }
+      const publishStatus = getPublishStatus();
+      const postData = await buildPostPayload(publishStatus);
 
       if (isEditMode) {
         await updatePost(id, postData);
-        setSuccess('Post updated successfully!');
+        setPostStatus(publishStatus);
+        setSuccess(publishStatus === 'PENDING_REVIEW' ? 'Post submitted for review!' : 'Post published successfully!');
       } else {
-        postData.userId = user.id;
         await createPost(postData);
-        setSuccess('Post created successfully!');
+        setSuccess(publishStatus === 'PENDING_REVIEW' ? 'Post submitted for review!' : 'Post created successfully!');
       }
       
       setTimeout(() => {
@@ -241,8 +319,16 @@ function PostForm() {
         </div>
         <div className={`magazine-main ${sidebarOpen ? 'sidebar-open' : ''}`}>
           <div style={{ maxWidth: '800px', margin: '0.5rem auto', padding: '0 1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-              <h1 style={{ margin: 0 }}>{isEditMode ? 'Edit Post' : 'Create New Post'}</h1>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <h1 style={{ margin: 0 }}>{isEditMode ? 'Edit Post' : 'Create New Post'}</h1>
+                {postStatus === 'DRAFT' && (
+                  <span className="status-badge status-badge-draft">Draft</span>
+                )}
+                {postStatus === 'PENDING_REVIEW' && (
+                  <span className="status-badge status-badge-pending">Pending review</span>
+                )}
+              </div>
               {isEditMode && (
                 <button
                   type="button"
@@ -434,18 +520,33 @@ function PostForm() {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+          <button 
+            type="button" 
+            className="btn btn-draft"
+            onClick={handleSaveDraft}
+            disabled={busy}
+          >
+            {savingDraft ? 'Saving draft...' : 'Save Draft'}
+          </button>
           <button 
             type="submit" 
             className="btn btn-primary"
-            disabled={loading || loadingPost}
+            disabled={busy}
           >
-            {loading ? (isEditMode ? 'Updating...' : 'Creating...') : (isEditMode ? 'Update Post' : 'Create Post')}
+            {loading
+              ? (postStatus === 'DRAFT' || !isEditMode
+                  ? ((isAdmin() || isEditor()) ? 'Publishing...' : 'Submitting...')
+                  : 'Updating...')
+              : (postStatus === 'DRAFT'
+                  ? ((isAdmin() || isEditor()) ? 'Publish' : 'Submit for Review')
+                  : (isEditMode ? 'Update Post' : ((isAdmin() || isEditor()) ? 'Create Post' : 'Submit for Review')))}
           </button>
           <button 
             type="button" 
             className="btn btn-secondary"
-            onClick={() => navigate('/')}
+            onClick={() => navigate(postStatus === 'DRAFT' ? '/drafts' : '/')}
+            disabled={busy}
           >
             Cancel
           </button>
