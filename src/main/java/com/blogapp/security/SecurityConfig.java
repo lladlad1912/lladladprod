@@ -24,12 +24,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${app.cors.allowed-origins:http://localhost:3000}")
+    @Value("${app.cors.allowed-origins:http://localhost:3000,http://127.0.0.1:3000}")
     private String allowedOrigins;
     
     @Autowired
@@ -91,11 +93,12 @@ public class SecurityConfig {
                 .requestMatchers("/api/users").hasRole("ADMIN")  // GET all users - admin only
                 .requestMatchers("/api/users/**").hasRole("ADMIN")  // POST, PUT, DELETE - admin only
                 .requestMatchers("/api/upload/**").authenticated()  // File upload - All authenticated users
-                // Comments - GET is public, POST/PUT/DELETE require authentication
-                .requestMatchers(HttpMethod.GET, "/api/comments/**").permitAll()  // GET comments - public
-                .requestMatchers(HttpMethod.POST, "/api/comments").authenticated()  // POST create comment - authenticated
-                .requestMatchers(HttpMethod.PUT, "/api/comments/**").authenticated()  // PUT update comment - authenticated
-                .requestMatchers(HttpMethod.DELETE, "/api/comments/**").authenticated()  // DELETE comment - authenticated
+                // Comments - GET is public. Use Ant matchers so /post/{id}/all is not
+                // treated as an authenticated catch-all (MVC ** can miss extra segments).
+                .requestMatchers(antMatcher(HttpMethod.GET, "/api/comments/**")).permitAll()
+                .requestMatchers(antMatcher(HttpMethod.POST, "/api/comments")).authenticated()
+                .requestMatchers(antMatcher(HttpMethod.PUT, "/api/comments/**")).authenticated()
+                .requestMatchers(antMatcher(HttpMethod.DELETE, "/api/comments/**")).authenticated()
                 .requestMatchers("/api/likes/**").authenticated()  // Likes - authenticated
                 .requestMatchers("/api/settings").permitAll()  // GET settings - public
                 .requestMatchers("/api/settings/**").hasAnyRole("ADMIN", "EDITOR")  // PUT settings - admin/editor

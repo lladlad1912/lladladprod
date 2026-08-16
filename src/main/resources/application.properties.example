@@ -34,10 +34,12 @@ spring.mail.password=your-app-password
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
-# Google OAuth2 Configuration (optional - for full OAuth2 flow)
-# spring.security.oauth2.client.registration.google.client-id=your-google-client-id
-# spring.security.oauth2.client.registration.google.client-secret=your-google-client-secret
-# spring.security.oauth2.client.registration.google.scope=profile,email
+# Google OAuth (ID token is verified by the backend)
+app.oauth.google.client-id=
+app.oauth.require-existing-user=false
+
+# CORS Configuration (for React frontend)
+app.cors.allowed-origins=http://localhost:3000,http://127.0.0.1:3000
 
 # Cache Configuration
 spring.cache.type=caffeine

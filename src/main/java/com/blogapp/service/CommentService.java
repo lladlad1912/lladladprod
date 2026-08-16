@@ -30,7 +30,23 @@ public class CommentService {
     
     @Autowired
     private UserRepository userRepository;
+
+    private Long resolvePostId(String postIdOrSlug) {
+        if (postIdOrSlug != null && postIdOrSlug.matches("\\d+")) {
+            Long id = Long.parseLong(postIdOrSlug);
+            if (postRepository.existsById(id)) {
+                return id;
+            }
+        }
+        return postRepository.findBySlug(postIdOrSlug)
+                .map(Post::getId)
+                .orElseThrow(() -> new RuntimeException("Post not found: " + postIdOrSlug));
+    }
     
+    public PageResponse<CommentDTO> getCommentsByPost(String postIdOrSlug, int page, int size) {
+        return getCommentsByPost(resolvePostId(postIdOrSlug), page, size);
+    }
+
     public PageResponse<CommentDTO> getCommentsByPost(Long postId, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Comment> commentPage = commentRepository.findByPostIdOrderByCreatedAtDesc(postId, pageable);
@@ -50,6 +66,10 @@ public class CommentService {
         );
     }
     
+    public List<CommentDTO> getAllCommentsByPost(String postIdOrSlug) {
+        return getAllCommentsByPost(resolvePostId(postIdOrSlug));
+    }
+
     public List<CommentDTO> getAllCommentsByPost(Long postId) {
         // Verify post exists
         if (!postRepository.existsById(postId)) {

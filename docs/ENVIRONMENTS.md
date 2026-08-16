@@ -186,4 +186,5 @@ docker compose --env-file .env.staging ps
 - [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) — local IDE setup
 - [DEPLOYMENT.md](./DEPLOYMENT.md) — VPS Docker deployment
 - [DATABASE.md](./DATABASE.md) — schema and MySQL details
+- [REMOTE_DATABASE.md](./REMOTE_DATABASE.md) — SSH tunnel to staging/prod MySQL, Google OAuth against existing users
 - [ARCHITECTURE.md](./ARCHITECTURE.md) — system diagram

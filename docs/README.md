@@ -39,6 +39,7 @@ All project documentation lives in this folder. Start here, then drill into what
 | Add a new API endpoint | [BACKEND.md](./BACKEND.md) → Making changes safely |
 | Add a new React page | [FRONTEND.md](./FRONTEND.md) → Making changes safely |
 | Change database schema | [DATABASE.md](./DATABASE.md) |
+| Connect laptop to staging/prod MySQL | [REMOTE_DATABASE.md](./REMOTE_DATABASE.md) |
 
 ---
 

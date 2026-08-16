@@ -234,6 +234,7 @@ function CommentSection({ postId }) {
   // focus is now handled inside CommentItem for the right textarea only
 
   useEffect(() => {
+    if (!postId) return;
     loadComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);

@@ -53,15 +53,8 @@ function Login() {
       setLoading(true);
       setError(null);
 
-      // Decode the JWT token from Google
-      const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      
-      // Prepare data for backend
       const googleUserData = {
-        email: payload.email,
-        name: payload.name,
-        picture: payload.picture,
-        sub: payload.sub,
+        credential: response.credential,
       };
 
       const result = await googleLogin(googleUserData);

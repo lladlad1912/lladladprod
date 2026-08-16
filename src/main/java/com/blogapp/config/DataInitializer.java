@@ -10,11 +10,13 @@ import com.blogapp.repository.SiteSettingsRepository;
 import com.blogapp.repository.UserRepository;
 import com.blogapp.util.SlugUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "app.seed-data", havingValue = "true", matchIfMissing = true)
 public class DataInitializer implements CommandLineRunner {
     
     @Autowired

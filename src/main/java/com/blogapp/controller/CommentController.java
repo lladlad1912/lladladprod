@@ -19,19 +19,22 @@ public class CommentController {
     @Autowired
     private CommentService commentService;
     
-    @GetMapping("/post/{postId}")
+    @GetMapping("/post/{postIdOrSlug}")
     public ResponseEntity<PageResponse<CommentDTO>> getCommentsByPost(
-            @PathVariable Long postId,
+            @PathVariable String postIdOrSlug,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        PageResponse<CommentDTO> comments = commentService.getCommentsByPost(postId, page, size);
+        PageResponse<CommentDTO> comments = commentService.getCommentsByPost(postIdOrSlug, page, size);
         return ResponseEntity.ok(comments);
     }
     
-    @GetMapping("/post/{postId}/all")
-    public ResponseEntity<List<CommentDTO>> getAllCommentsByPost(@PathVariable Long postId) {
-        List<CommentDTO> comments = commentService.getAllCommentsByPost(postId);
-        return ResponseEntity.ok(comments);
+    @GetMapping("/post/{postIdOrSlug}/all")
+    public ResponseEntity<?> getAllCommentsByPost(@PathVariable String postIdOrSlug) {
+        try {
+            return ResponseEntity.ok(commentService.getAllCommentsByPost(postIdOrSlug));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
     
     @PostMapping

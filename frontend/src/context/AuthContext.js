@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return { 
         success: false, 
-        error: error.response?.data || 'Google login failed' 
+        error: error.response?.data?.message || error.response?.data || 'Google login failed' 
       };
     }
   };

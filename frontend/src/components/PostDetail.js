@@ -458,7 +458,7 @@ function PostDetail() {
               )}
 
               {/* Comments Section - Using CommentSection component */}
-              <CommentSection postId={id} />
+              <CommentSection postId={post.id} />
             </div>
           </div>
         </div>
