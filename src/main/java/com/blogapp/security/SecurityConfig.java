@@ -96,9 +96,9 @@ public class SecurityConfig {
                 // Comments - GET is public. Use Ant matchers so /post/{id}/all is not
                 // treated as an authenticated catch-all (MVC ** can miss extra segments).
                 .requestMatchers(antMatcher(HttpMethod.GET, "/api/comments/**")).permitAll()
-                .requestMatchers(antMatcher(HttpMethod.POST, "/api/comments")).authenticated()
-                .requestMatchers(antMatcher(HttpMethod.PUT, "/api/comments/**")).authenticated()
-                .requestMatchers(antMatcher(HttpMethod.DELETE, "/api/comments/**")).authenticated()
+                .requestMatchers(antMatcher(HttpMethod.POST, "/api/comments")).permitAll()
+                .requestMatchers(antMatcher(HttpMethod.PUT, "/api/comments/**")).permitAll()
+                .requestMatchers(antMatcher(HttpMethod.DELETE, "/api/comments/**")).permitAll()
                 .requestMatchers("/api/likes/**").authenticated()  // Likes - authenticated
                 .requestMatchers("/api/settings").permitAll()  // GET settings - public
                 .requestMatchers("/api/settings/**").hasAnyRole("ADMIN", "EDITOR")  // PUT settings - admin/editor
@@ -107,7 +107,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/ads/**").hasRole("ADMIN")  // POST, PUT, DELETE ads - admin only
                 .requestMatchers("/api/contact/submit").permitAll()  // POST contact - public
                 .requestMatchers("/api/contact/**").hasRole("ADMIN")  // GET, PUT, DELETE submissions - admin only
-                .requestMatchers("/api/statistics/**").hasAnyRole("ADMIN", "EDITOR", "USER")  // Statistics - ADMIN, EDITOR, and USER
+                .requestMatchers(antMatcher(HttpMethod.GET, "/api/statistics/**")).authenticated()
+                .requestMatchers("/api/statistics/**").authenticated()
                 .requestMatchers("/api/follows/**").authenticated()  // Follow endpoints - authenticated
                         .requestMatchers("/api/newsletter/**").authenticated()  // Newsletter - authenticated
                         .requestMatchers("/api/payments/**").authenticated()  // Payments - authenticated

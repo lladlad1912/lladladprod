@@ -3,6 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getComments, getAllComments, createComment, updateComment, deleteComment } from '../services/api';
 import { uploadUrl } from '../config';
+import { generateGuestKey, loadGuestIdentity, saveGuestIdentity } from '../utils/guestIdentity';
 import '../App.css';
 
 /**
@@ -13,6 +14,8 @@ const CommentItem = ({
   comment,
   depth = 0,
   user,
+  canReply,
+  canManageComment,
   replyingTo,
   replyText,
   editingId,
@@ -30,6 +33,7 @@ const CommentItem = ({
   const isReply = depth > 0;
   const maxDepth = 3;
   const isEditing = editingId === comment.id;
+  const canManage = canManageComment ? canManageComment(comment) : false;
 
   // 🔹 ADDED: local ref for this reply textarea
   const replyInputRef = useRef(null);
@@ -86,6 +90,11 @@ const CommentItem = ({
                 </div>
               )}
               <strong>{comment.username}</strong>
+              {comment.guest && (
+                <span style={{ fontSize: '0.75rem', color: '#64748b', background: '#e2e8f0', padding: '0.1rem 0.4rem', borderRadius: '999px' }}>
+                  guest
+                </span>
+              )}
               <span style={{ color: '#666', fontSize: '0.85rem' }}>
                 {new Date(comment.createdAt).toLocaleString()}
               </span>
@@ -122,7 +131,7 @@ const CommentItem = ({
               </div>
             )}
             
-            {user && depth < maxDepth && !isEditing && (
+            {canReply && depth < maxDepth && !isEditing && (
               <button
                 onClick={() => onReplyClick(comment.id)}
                 className="btn"
@@ -178,19 +187,27 @@ const CommentItem = ({
                     comment={reply} 
                     depth={depth + 1}
                     user={user}
+                    canReply={canReply}
+                    canManageComment={canManageComment}
                     replyingTo={replyingTo}
                     replyText={replyText}
+                    editingId={editingId}
+                    editText={editText}
                     onReplyClick={onReplyClick}
                     onReplySubmit={onReplySubmit}
                     onReplyCancel={onReplyCancel}
                     onReplyTextChange={onReplyTextChange}
+                    onEditClick={onEditClick}
+                    onEditTextChange={onEditTextChange}
+                    onEditSave={onEditSave}
+                    onEditCancel={onEditCancel}
                     onDeleteComment={onDeleteComment}
                   />
                 ))}
               </div>
             )}
           </div>
-          {(user?.id === comment.userId || user?.role === 'ADMIN') && (
+          {(canManage || user?.role === 'ADMIN') && (
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               {!isEditing && (
                 <button
@@ -219,15 +236,19 @@ const CommentItem = ({
 
 function CommentSection({ postId }) {
   const { user } = useAuth();
+  const storedGuest = loadGuestIdentity();
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
+  const [guestName, setGuestName] = useState(storedGuest.name);
+  const [guestKey, setGuestKey] = useState(storedGuest.key || generateGuestKey());
+  const [showGuestKey, setShowGuestKey] = useState(false);
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [notice, setNotice] = useState(null); // { type: 'success' | 'error', message: string }
+  const [notice, setNotice] = useState(null);
   const noticeTimerRef = useRef(null);
 
   // 🔹 REMOVED replyInputRef + useEffect from here
@@ -238,6 +259,12 @@ function CommentSection({ postId }) {
     loadComments();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
+
+  useEffect(() => {
+    if (!user && guestKey) {
+      saveGuestIdentity(guestName.trim(), guestKey.trim());
+    }
+  }, [user, guestName, guestKey]);
 
   useEffect(() => {
     return () => {
@@ -298,44 +325,76 @@ function CommentSection({ postId }) {
     }
   };
 
+  const buildCommentPayload = (content, parentId) => {
+    const payload = {
+      postId,
+      content
+    };
+    if (parentId) {
+      payload.parentId = parentId;
+    }
+    if (!user) {
+      payload.guestName = guestName.trim();
+      payload.guestKey = guestKey.trim();
+    }
+    return payload;
+  };
+
+  const ensureGuestDetails = () => {
+    if (user) return true;
+    if (!guestName.trim() || guestName.trim().length < 2) {
+      setError('Enter a display name to comment as a guest.');
+      return false;
+    }
+    if (!guestKey.trim() || guestKey.trim().length < 4) {
+      setError('Guest key must be at least 4 characters so you can come back as the same person.');
+      return false;
+    }
+    saveGuestIdentity(guestName.trim(), guestKey.trim());
+    return true;
+  };
+
+  const canManageComment = (comment) => {
+    if (user?.role === 'ADMIN') return true;
+    if (user && comment.userId && user.id === comment.userId) return true;
+    if (comment.guest && guestName.trim() && comment.username
+        && comment.username.toLowerCase() === guestName.trim().toLowerCase()) {
+      return true;
+    }
+    return false;
+  };
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
-    if (!user) return;
     if (!newComment.trim()) return;
+    if (!ensureGuestDetails()) return;
 
     try {
-      await createComment({
-        postId: parseInt(postId),
-        userId: user.id,
-        content: newComment
-      });
+      await createComment(buildCommentPayload(newComment));
       setNewComment('');
       showNotice('success', 'Comment posted');
       loadComments();
     } catch (err) {
-      setError('Failed to add comment');
+      const message = err.response?.data || 'Failed to add comment';
+      setError(typeof message === 'string' ? message : 'Failed to add comment');
       console.error(err);
       showNotice('error', 'Failed to post comment');
     }
   };
 
   const handleReplySubmit = async (parentId) => {
-    if (!user) return;
     if (!replyText.trim()) return;
+    if (!ensureGuestDetails()) return;
 
     try {
-      await createComment({
-        postId: parseInt(postId),
-        userId: user.id,
-        content: replyText,
-        parentId: parentId
-      });
+      await createComment(buildCommentPayload(replyText, parentId));
       setReplyText('');
       setReplyingTo(null);
       showNotice('success', 'Reply posted');
       loadComments();
     } catch (err) {
-      setError('Failed to add reply');
+      const message = err.response?.data || 'Failed to add reply';
+      setError(typeof message === 'string' ? message : 'Failed to add reply');
       console.error(err);
       showNotice('error', 'Failed to post reply');
     }
@@ -344,7 +403,7 @@ function CommentSection({ postId }) {
   const handleDeleteComment = async (commentId) => {
     if (window.confirm('Delete this comment?')) {
       try {
-        await deleteComment(commentId);
+        await deleteComment(commentId, user ? {} : { guestKey: guestKey.trim() });
         showNotice('success', 'Comment deleted');
         loadComments();
       } catch (err) {
@@ -407,13 +466,12 @@ function CommentSection({ postId }) {
   };
 
   const handleEditSave = async (commentId) => {
-    if (!user) return;
     if (!editText.trim()) return;
+    if (!user && !ensureGuestDetails()) return;
     try {
       await updateComment(commentId, {
-        postId: parseInt(postId),
-        userId: user.id,
-        content: editText
+        content: editText,
+        ...(user ? {} : { guestKey: guestKey.trim() })
       });
       setEditingId(null);
       setEditText('');
@@ -441,27 +499,53 @@ function CommentSection({ postId }) {
       )}
       {error && <div className="error">{error}</div>}
 
-      {user && (
-        <form onSubmit={handleCommentSubmit} style={{ marginBottom: '2rem' }}>
-          <div className="form-group">
-            <textarea
-              className="form-textarea"
-              placeholder="Write a comment..."
-              value={newComment}
-              onChange={handleNewCommentChange}
-              rows="3"
-              // 🔹 CHANGED: removed custom onWheel to keep scrolling natural
-            />
+      <form onSubmit={handleCommentSubmit} style={{ marginBottom: '2rem' }}>
+        {!user && (
+          <div className="guest-comment-fields">
+            <p style={{ color: '#475569', marginBottom: '0.75rem', fontSize: '0.9rem' }}>
+              Comment without an account. Use the same display name and guest key later to keep posting, editing, and deleting as the same person. This device remembers them.
+            </p>
+            <div className="guest-comment-grid">
+              <input
+                className="form-input"
+                placeholder="Display name"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                maxLength={80}
+                autoComplete="nickname"
+              />
+              <div className="guest-key-row">
+                <input
+                  className="form-input"
+                  placeholder="Guest key"
+                  type={showGuestKey ? 'text' : 'password'}
+                  value={guestKey}
+                  onChange={(e) => setGuestKey(e.target.value)}
+                  maxLength={64}
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowGuestKey((value) => !value)}
+                >
+                  {showGuestKey ? 'Hide' : 'Show'}
+                </button>
+              </div>
+            </div>
           </div>
-          <button type="submit" className="btn btn-primary">Post Comment</button>
-        </form>
-      )}
-
-      {!user && (
-        <p style={{ color: '#666', marginBottom: '1rem', padding: '1rem', background: '#f8f9fa', borderRadius: '6px' }}>
-          <a href="/login" style={{ color: '#667eea', textDecoration: 'none' }}>Login</a> to post a comment
-        </p>
-      )}
+        )}
+        <div className="form-group">
+          <textarea
+            className="form-textarea"
+            placeholder={user ? 'Write a comment...' : 'Write a guest comment...'}
+            value={newComment}
+            onChange={handleNewCommentChange}
+            rows="3"
+          />
+        </div>
+        <button type="submit" className="btn btn-primary">Post Comment</button>
+      </form>
 
       <div>
         {comments.length === 0 ? (
@@ -475,6 +559,8 @@ function CommentSection({ postId }) {
               comment={comment} 
               depth={0}
               user={user}
+              canReply={true}
+              canManageComment={canManageComment}
               replyingTo={replyingTo}
               replyText={replyText}
               editingId={editingId}

@@ -20,6 +20,7 @@ public class CommentDTO {
     private Long userId;
     private String username;
     private String userProfileImage;
+    private boolean guest;
     private Long parentId;  // For nested comments
     private List<CommentDTO> replies = new ArrayList<>();  // Child comments
 }

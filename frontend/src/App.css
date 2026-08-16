@@ -2047,6 +2047,44 @@ h1, h2, h3, h4, h5, h6 {
   color: white;
 }
 
+.statistics-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 300px) 1fr;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.guest-comment-fields .form-input {
+  width: 100%;
+}
+
+.guest-comment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.guest-key-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.guest-key-row .form-input {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .statistics-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .guest-comment-grid,
+  .guest-comment-fields > div {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 /* Footer Styles */
 .footer {
   background: #1e3a8a;

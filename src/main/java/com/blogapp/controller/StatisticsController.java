@@ -8,12 +8,10 @@ import com.blogapp.repository.UserRepository;
 import com.blogapp.service.PostViewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/statistics")
@@ -29,57 +27,54 @@ public class StatisticsController {
     private UserRepository userRepository;
     
     @GetMapping("/posts")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR', 'USER')")
-    public ResponseEntity<List<PostStatisticsDTO>> getAllPostsStatistics(Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        List<PostStatisticsDTO> stats;
-        
-        // Admin and Editor see all posts, regular users see only their own posts
-        if (user.getRole() != null && (user.getRole().equals("ADMIN") || user.getRole().equals("EDITOR"))) {
-            stats = postViewService.getAllPostsStatistics();
-        } else {
-            // Regular users see only their own posts
-            stats = postRepository.findByAuthorId(user.getId()).stream()
-                    .map(post -> {
-                        PostStatisticsDTO postStats = new PostStatisticsDTO();
-                        postStats.setPostId(post.getId());
-                        postStats.setPostTitle(post.getTitle());
-                        postStats.setTotalViews(postViewService.getPostStatistics(post.getId()).getTotalViews());
-                        postStats.setUniqueVisitors(postViewService.getPostStatistics(post.getId()).getUniqueVisitors());
-                        return postStats;
-                    })
-                    .collect(Collectors.toList());
+    public ResponseEntity<?> getAllPostsStatistics(Authentication authentication) {
+        try {
+            User user = requireUser(authentication);
+            if (user == null) {
+                return ResponseEntity.status(401).body("Login required to view statistics");
+            }
+            List<PostStatisticsDTO> stats = isStaff(user)
+                    ? postViewService.getAllPostsStatistics()
+                    : postViewService.getAuthorPostsStatistics(user.getId());
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Failed to load statistics: " + e.getMessage());
         }
-        
-        return ResponseEntity.ok(stats);
     }
     
     @GetMapping("/posts/{postId}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'EDITOR', 'USER')")
-    public ResponseEntity<PostStatisticsDTO> getPostStatistics(@PathVariable Long postId, Authentication authentication) {
-        String username = authentication.getName();
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        // Check if user has permission to view this post's statistics
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new RuntimeException("Post not found"));
-        
-        // Admin and Editor can see all posts, regular users can only see their own posts
-        if (user.getRole() != null && (user.getRole().equals("ADMIN") || user.getRole().equals("EDITOR"))) {
-            PostStatisticsDTO stats = postViewService.getPostStatistics(postId);
-            return ResponseEntity.ok(stats);
-        } else {
-            // Regular users can only see their own posts
-            if (!post.getAuthor().getId().equals(user.getId())) {
-                return ResponseEntity.status(403).body(null);
+    public ResponseEntity<?> getPostStatistics(@PathVariable Long postId, Authentication authentication) {
+        try {
+            User user = requireUser(authentication);
+            if (user == null) {
+                return ResponseEntity.status(401).body("Login required to view statistics");
             }
-            PostStatisticsDTO stats = postViewService.getPostStatistics(postId);
-            return ResponseEntity.ok(stats);
+            Post post = postRepository.findById(postId)
+                    .orElseThrow(() -> new RuntimeException("Post not found"));
+            
+            if (!isStaff(user) && !post.getAuthor().getId().equals(user.getId())) {
+                return ResponseEntity.status(403).body("You can only view statistics for your own posts");
+            }
+            return ResponseEntity.ok(postViewService.getPostStatistics(postId));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Failed to load post statistics: " + e.getMessage());
         }
+    }
+
+    private User requireUser(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            return null;
+        }
+        String name = authentication.getName();
+        return userRepository.findByUsername(name)
+                .or(() -> userRepository.findByEmail(name))
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    private boolean isStaff(User user) {
+        return user.getRole() != null
+                && (user.getRole().equals("ADMIN") || user.getRole().equals("EDITOR"));
     }
 }
 

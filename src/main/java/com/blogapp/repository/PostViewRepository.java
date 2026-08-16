@@ -31,7 +31,9 @@ public interface PostViewRepository extends JpaRepository<PostView, Long> {
     @Query("SELECT COUNT(pv) FROM PostView pv WHERE pv.post.id = :postId AND pv.viewedAt >= :startDate")
     long countViewsSince(@Param("postId") Long postId, @Param("startDate") LocalDateTime startDate);
     
-    @Query("SELECT DATE(pv.viewedAt), COUNT(pv) FROM PostView pv WHERE pv.post.id = :postId GROUP BY DATE(pv.viewedAt) ORDER BY DATE(pv.viewedAt) DESC")
+    // Native CAST works on both H2 (local dev) and MySQL. JPQL DATE() is not portable
+    // and was throwing on the statistics page when loading per-post details.
+    @Query(value = "SELECT CAST(pv.viewed_at AS DATE), COUNT(*) FROM post_views pv WHERE pv.post_id = :postId GROUP BY CAST(pv.viewed_at AS DATE) ORDER BY CAST(pv.viewed_at AS DATE) DESC", nativeQuery = true)
     List<Object[]> getViewsByDate(@Param("postId") Long postId);
 }
 

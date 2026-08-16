@@ -113,7 +113,7 @@ public class PostViewService {
         List<PostStatisticsDTO.CountryViewDTO> countryViews = countryData.stream()
                 .map(data -> new PostStatisticsDTO.CountryViewDTO(
                         (String) data[0],
-                        (Long) data[1]
+                        toLong(data[1])
                 ))
                 .collect(Collectors.toList());
         stats.setViewsByCountry(countryViews);
@@ -131,28 +131,12 @@ public class PostViewService {
             cityViews.add(new PostStatisticsDTO.CityViewDTO(
                     (String) data[0],
                     country,
-                    (Long) data[1]
+                    toLong(data[1])
             ));
         }
         stats.setViewsByCity(cityViews);
         
-        // Get views by date
-        List<Object[]> dateData = postViewRepository.getViewsByDate(postId);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        List<PostStatisticsDTO.DateViewDTO> dateViews = dateData.stream()
-                .map(data -> {
-                    String dateStr;
-                    if (data[0] instanceof LocalDateTime) {
-                        dateStr = ((LocalDateTime) data[0]).format(formatter);
-                    } else if (data[0] instanceof java.sql.Date) {
-                        dateStr = ((java.sql.Date) data[0]).toLocalDate().format(formatter);
-                    } else {
-                        dateStr = data[0].toString();
-                    }
-                    return new PostStatisticsDTO.DateViewDTO(dateStr, (Long) data[1]);
-                })
-                .collect(Collectors.toList());
-        stats.setViewsByDate(dateViews);
+        stats.setViewsByDate(loadViewsByDate(postId));
         
         // Get recent views (last 50)
         List<PostView> recentViews = postViewRepository.getRecentViewsByPostId(postId)
@@ -179,17 +163,59 @@ public class PostViewService {
     }
     
     public List<PostStatisticsDTO> getAllPostsStatistics() {
-        List<Post> posts = postRepository.findAll();
-        return posts.stream()
-                .map(post -> {
-                    PostStatisticsDTO stats = new PostStatisticsDTO();
-                    stats.setPostId(post.getId());
-                    stats.setPostTitle(post.getTitle());
-                    stats.setTotalViews(postViewRepository.countByPostId(post.getId()));
-                    stats.setUniqueVisitors(postViewRepository.countUniqueVisitorsByPostId(post.getId()));
-                    return stats;
-                })
+        return postRepository.findAll().stream()
+                .map(this::toSummaryStatistics)
                 .collect(Collectors.toList());
+    }
+
+    public List<PostStatisticsDTO> getAuthorPostsStatistics(Long authorId) {
+        return postRepository.findByAuthorId(authorId).stream()
+                .map(this::toSummaryStatistics)
+                .collect(Collectors.toList());
+    }
+
+    private PostStatisticsDTO toSummaryStatistics(Post post) {
+        PostStatisticsDTO stats = new PostStatisticsDTO();
+        stats.setPostId(post.getId());
+        stats.setPostTitle(post.getTitle());
+        stats.setTotalViews(postViewRepository.countByPostId(post.getId()));
+        stats.setUniqueVisitors(postViewRepository.countUniqueVisitorsByPostId(post.getId()));
+        return stats;
+    }
+
+    private List<PostStatisticsDTO.DateViewDTO> loadViewsByDate(Long postId) {
+        try {
+            List<Object[]> dateData = postViewRepository.getViewsByDate(postId);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            return dateData.stream()
+                    .map(data -> new PostStatisticsDTO.DateViewDTO(toDateString(data[0], formatter), toLong(data[1])))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    private String toDateString(Object value, DateTimeFormatter formatter) {
+        if (value instanceof LocalDateTime localDateTime) {
+            return localDateTime.format(formatter);
+        }
+        if (value instanceof java.time.LocalDate localDate) {
+            return localDate.format(formatter);
+        }
+        if (value instanceof java.sql.Date sqlDate) {
+            return sqlDate.toLocalDate().format(formatter);
+        }
+        if (value instanceof java.sql.Timestamp timestamp) {
+            return timestamp.toLocalDateTime().format(formatter);
+        }
+        return value == null ? "" : value.toString();
+    }
+
+    private long toLong(Object value) {
+        if (value instanceof Number number) {
+            return number.longValue();
+        }
+        return 0L;
     }
 }
 

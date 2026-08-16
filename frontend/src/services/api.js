@@ -26,8 +26,8 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Token expired or invalid
+    if (error.response?.status === 401 && localStorage.getItem('token')) {
+      // Token expired or invalid. Guests posting comments have no token — do not bounce them to login.
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
@@ -124,7 +124,7 @@ export const getAllComments = (postId) =>
   api.get(`/comments/post/${postId}/all`);  // Get all comments with nested structure
 export const createComment = (commentData) => api.post('/comments', commentData);
 export const updateComment = (id, commentData) => api.put(`/comments/${id}`, commentData);
-export const deleteComment = (id) => api.delete(`/comments/${id}`);
+export const deleteComment = (id, extra = {}) => api.delete(`/comments/${id}`, { data: extra });
 
 // Likes API
 export const toggleLike = (postId, userId) => 

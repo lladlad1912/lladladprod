@@ -36,10 +36,16 @@ public class Comment {
     @JoinColumn(name = "post_id", nullable = false)
     private Post post;
     
-    // Many comments belong to one user
+    // Many comments belong to one user (null for guest comments)
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
+
+    @Column(name = "guest_name", length = 80)
+    private String guestName;
+
+    @Column(name = "guest_key_hash", length = 128)
+    private String guestKeyHash;
     
     // Parent comment for nested replies
     @ManyToOne(fetch = FetchType.LAZY)

@@ -17,8 +17,9 @@ function PostStatistics() {
   const [selectedPostId, setSelectedPostId] = useState(id ? parseInt(id) : null);
 
   useEffect(() => {
+    if (!user) return;
     loadStatistics();
-  }, [selectedPostId]);
+  }, [selectedPostId, user]);
 
   const loadStatistics = async () => {
     try {
@@ -27,15 +28,22 @@ function PostStatistics() {
       
       // Load all posts statistics
       const allStatsResponse = await getAllPostsStatistics();
-      setAllPostsStats(allStatsResponse.data);
+      setAllPostsStats(Array.isArray(allStatsResponse.data) ? allStatsResponse.data : []);
       
-      // If a specific post is selected, load its detailed statistics
       if (selectedPostId) {
         const postStatsResponse = await getPostStatistics(selectedPostId);
         setSelectedPostStats(postStatsResponse.data);
       }
     } catch (err) {
-      setError('Failed to load statistics');
+      const status = err.response?.status;
+      const detail = err.response?.data;
+      if (status === 401 || status === 403) {
+        setError('You need to be logged in to view statistics.');
+      } else if (typeof detail === 'string' && detail.trim()) {
+        setError(detail);
+      } else {
+        setError('Failed to load statistics');
+      }
       console.error(err);
     } finally {
       setLoading(false);
@@ -157,7 +165,7 @@ function PostStatistics() {
             
             {error && <div className="error">{error}</div>}
             
-            <div style={{ display: 'grid', gridTemplateColumns: '300px 1fr', gap: '2rem', marginTop: '2rem' }}>
+            <div className="statistics-layout">
               {/* Posts List */}
               <div className="card">
                 <h3>All Posts</h3>
