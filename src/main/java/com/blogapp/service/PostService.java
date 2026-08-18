@@ -54,9 +54,10 @@ public class PostService {
     }
     
     public List<PostDTO> getAllPosts(String userRole) {
-        // For admin/editor, show all posts. For regular users, only show published posts
+        // Home/list feeds never include drafts. Admins and editors still see
+        // pending/rejected posts; authors open drafts from My Drafts.
         if (userRole != null && (userRole.equals("ADMIN") || userRole.equals("EDITOR"))) {
-            return postRepository.findAllOrderByCreatedAtDesc().stream()
+            return postRepository.findAllExcludingDraftsOrderByCreatedAtDesc().stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
         } else {
@@ -89,9 +90,8 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> postPage;
         
-        // For admin/editor, show all posts. For regular users, only show published posts
         if (userRole != null && (userRole.equals("ADMIN") || userRole.equals("EDITOR"))) {
-            postPage = postRepository.findAllOrderByCreatedAtDesc(pageable);
+            postPage = postRepository.findAllExcludingDraftsOrderByCreatedAtDesc(pageable);
         } else {
             postPage = postRepository.findAllByStatusOrderByCreatedAtDesc("PUBLISHED", pageable);
         }
@@ -157,9 +157,8 @@ public class PostService {
     }
     
     public List<PostDTO> getPostsByCategory(Long categoryId, String userRole) {
-        // For admin/editor, show all posts. For regular users, only show published posts
         if (userRole != null && (userRole.equals("ADMIN") || userRole.equals("EDITOR"))) {
-            return postRepository.findByCategoryId(categoryId).stream()
+            return postRepository.findByCategoryIdExcludingDrafts(categoryId).stream()
                     .map(this::convertToDTO)
                     .collect(Collectors.toList());
         } else {
@@ -192,9 +191,8 @@ public class PostService {
         Pageable pageable = PageRequest.of(page, size);
         Page<Post> postPage;
         
-        // For admin/editor, show all posts. For regular users, only show published posts
         if (userRole != null && (userRole.equals("ADMIN") || userRole.equals("EDITOR"))) {
-            postPage = postRepository.findByCategoryId(categoryId, pageable);
+            postPage = postRepository.findByCategoryIdExcludingDrafts(categoryId, pageable);
         } else {
             postPage = postRepository.findByStatusAndCategoryId("PUBLISHED", categoryId, pageable);
         }
@@ -215,14 +213,27 @@ public class PostService {
     }
     
     public List<PostDTO> getPostsByUser(Long userId) {
-        return postRepository.findByAuthorId(userId).stream()
+        return getPostsByUser(userId, null);
+    }
+
+    public List<PostDTO> getPostsByUser(Long userId, String currentUsername) {
+        List<Post> posts = canViewAuthorDrafts(userId, currentUsername)
+                ? postRepository.findByAuthorId(userId)
+                : postRepository.findPublishedByAuthorId(userId);
+        return posts.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
     
     public PageResponse<PostDTO> getPostsByUser(Long userId, int page, int size) {
+        return getPostsByUser(userId, page, size, null);
+    }
+
+    public PageResponse<PostDTO> getPostsByUser(Long userId, int page, int size, String currentUsername) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<Post> postPage = postRepository.findByAuthorId(userId, pageable);
+        Page<Post> postPage = canViewAuthorDrafts(userId, currentUsername)
+                ? postRepository.findByAuthorId(userId, pageable)
+                : postRepository.findPublishedByAuthorId(userId, pageable);
         
         List<PostDTO> content = postPage.getContent().stream()
                 .map(this::convertToDTO)
@@ -287,16 +298,12 @@ public class PostService {
             post.setSubCategory(subCategory);
         }
         
-        // Set post status based on user role
-        // ADMIN and EDITOR posts are published immediately
-        // Regular USER posts need review
+        // Keep an explicit DRAFT when the client asked to save a draft.
+        // Otherwise default by role: ADMIN/EDITOR publish immediately, USER goes to review.
         if (post.getStatus() == null || post.getStatus().isEmpty()) {
-            String userRole = author.getRole();
-            if (userRole != null && (userRole.equals("ADMIN") || userRole.equals("EDITOR"))) {
-                post.setStatus("PUBLISHED");
-            } else {
-                post.setStatus("PENDING_REVIEW");
-            }
+            post.setStatus(defaultStatusForRole(author.getRole()));
+        } else {
+            post.setStatus(resolveRequestedStatus(post.getStatus(), author));
         }
 
         if (post.getSlug() == null || post.getSlug().isBlank()) {
@@ -359,8 +366,8 @@ public class PostService {
             post.setMetaKeywords(postDetails.getMetaKeywords());
         }
 
-        if(postDetails.getStatus()!= null){
-            post.setStatus(postDetails.getStatus());
+        if (postDetails.getStatus() != null) {
+            post.setStatus(resolveRequestedStatus(postDetails.getStatus(), currentUser));
         }
         
         if (postDetails.getCategory() != null) {
@@ -453,12 +460,59 @@ public class PostService {
         User currentUser = userRepository.findByUsername(currentUsername).orElseThrow(()-> new RuntimeException("User not found"));
 
         boolean isAdmin = "ADMIN".equals(currentUser.getRole());
+        boolean isEditor = "EDITOR".equals(currentUser.getRole());
         boolean isOwner = post.getAuthor().getId().equals(currentUser.getId());
 
-        // draft only for admin or the author
-        if("DRAFT".equals(status) && !isOwner && !isAdmin){
+        // draft only for admin, editor, or the author
+        if("DRAFT".equals(status) && !isOwner && !isAdmin && !isEditor){
             throw new RuntimeException("Post not found with id: "+ post.getId());
         }
+    }
+
+    public List<PostDTO> getDraftsByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return postRepository.findByStatusAndAuthorIdOrderByUpdatedAtDesc("DRAFT", user.getId()).stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    private boolean canViewAuthorDrafts(Long authorId, String currentUsername) {
+        if (currentUsername == null) {
+            return false;
+        }
+        User currentUser = userRepository.findByUsername(currentUsername).orElse(null);
+        if (currentUser == null) {
+            return false;
+        }
+        boolean isAdmin = "ADMIN".equals(currentUser.getRole());
+        boolean isOwner = currentUser.getId().equals(authorId);
+        return isAdmin || isOwner;
+    }
+
+    private boolean isPrivileged(String role) {
+        return "ADMIN".equals(role) || "EDITOR".equals(role);
+    }
+
+    private String defaultStatusForRole(String role) {
+        return isPrivileged(role) ? "PUBLISHED" : "PENDING_REVIEW";
+    }
+
+    private String resolveRequestedStatus(String requestedStatus, User actor) {
+        String status = requestedStatus.trim().toUpperCase();
+        if (!status.equals("DRAFT")
+                && !status.equals("PENDING_REVIEW")
+                && !status.equals("PUBLISHED")
+                && !status.equals("REJECTED")) {
+            throw new RuntimeException("Invalid post status: " + requestedStatus);
+        }
+        if ("PUBLISHED".equals(status) && !isPrivileged(actor.getRole())) {
+            return "PENDING_REVIEW";
+        }
+        if ("REJECTED".equals(status) && !isPrivileged(actor.getRole())) {
+            throw new RuntimeException("You don't have permission to reject posts.");
+        }
+        return status;
     }
     
     public void incrementViewCount(Long postId) {

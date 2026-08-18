@@ -23,6 +23,7 @@ import AdminAds from './components/AdminAds';
 import WriteForLladlad from './components/WriteForLladlad';
 import PostStatistics from './components/PostStatistics';
 import PostmarksPage from './components/PostmarksPage';
+import DraftsPage from './components/DraftsPage';
 import ProfileSetup from './components/ProfileSetup';
 import PostReviewPage from './components/PostReviewPage';
 import SEO from './components/SEO';
@@ -531,6 +532,14 @@ function AppContent() {
             element={
               <ProtectedRoute requireAdmin={true}>
                 <AdminAds />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/drafts" 
+            element={
+              <ProtectedRoute>
+                <DraftsPage />
               </ProtectedRoute>
             } 
           />

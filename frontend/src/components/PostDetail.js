@@ -94,14 +94,16 @@ function PostDetail() {
       setReadingProgress(loadReadProgress(loaded.id));
       setError(null);
 
-      try {
-        await incrementPostView(loaded.id, user?.id || null);
-        const refreshed = await getPost(loaded.id);
-        if (refreshed.data) {
-          setViewCount(refreshed.data.viewCount || 0);
+      if (loaded.status !== 'DRAFT') {
+        try {
+          await incrementPostView(loaded.id, user?.id || null);
+          const refreshed = await getPost(loaded.id, user?.id);
+          if (refreshed.data) {
+            setViewCount(refreshed.data.viewCount || 0);
+          }
+        } catch (err) {
+          console.error('Failed to track view:', err);
         }
-      } catch (err) {
-        console.error('Failed to track view:', err);
       }
     } catch (err) {
       setError('Failed to load post');
@@ -196,6 +198,7 @@ function PostDetail() {
         modifiedTime={post.updatedAt}
         articleSection={post.categoryName}
         tags={tags}
+        robots={post.status === 'DRAFT' ? 'noindex, nofollow' : 'index, follow'}
       />
       <StructuredData
         type="Article"
@@ -251,6 +254,18 @@ function PostDetail() {
             <Link to="/" className="btn btn-back" style={{ marginBottom: '0.5rem' }}>
               ← Back to Posts
             </Link>
+
+            {post.status === 'DRAFT' && (
+              <div className="draft-banner">
+                This post is a draft. Only you and admins can see it.
+                {(isAdmin() || user?.id === post.authorId) && (
+                  <>
+                    {' '}
+                    <Link to={`/posts/${id}/edit`}>Continue editing</Link>
+                  </>
+                )}
+              </div>
+            )}
 
             <div className="card" style={{ position: 'relative' }}>
               {/* Edit/Delete buttons at top right */}

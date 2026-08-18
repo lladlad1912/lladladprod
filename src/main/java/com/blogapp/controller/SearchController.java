@@ -72,12 +72,13 @@ public class SearchController {
             if (type.equals("all") || type.equals("posts")) {
                 List<Post> postResults;
                 if (userRole != null && (userRole.equals("ADMIN") || userRole.equals("EDITOR"))) {
-                    // Admin/Editor see all posts
+                    // Admin/Editor see all non-draft posts in unified search
                     postResults = postRepository.findAll().stream()
-                            .filter(post -> 
-                                (post.getTitle() != null && post.getTitle().toLowerCase().contains(searchKeyword)) ||
+                            .filter(post ->
+                                (post.getStatus() == null || !"DRAFT".equals(post.getStatus())) &&
+                                ((post.getTitle() != null && post.getTitle().toLowerCase().contains(searchKeyword)) ||
                                 (post.getContent() != null && post.getContent().toLowerCase().contains(searchKeyword)) ||
-                                (post.getHashtags() != null && post.getHashtags().toLowerCase().contains(searchKeyword))
+                                (post.getHashtags() != null && post.getHashtags().toLowerCase().contains(searchKeyword)))
                             )
                             .collect(Collectors.toList());
                 } else {

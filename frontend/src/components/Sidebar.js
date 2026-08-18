@@ -517,6 +517,13 @@ function Sidebar({ onClose }) {
           >
             + Create New Post
           </Link>
+          <Link 
+            to="/drafts" 
+            className="btn btn-secondary" 
+            style={{ width: '100%', textAlign: 'center', display: 'block', marginBottom: '0.5rem' }}
+          >
+            My Drafts
+          </Link>
           {user && (
             <Link 
               to="/statistics" 

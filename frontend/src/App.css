@@ -793,6 +793,51 @@ h1, h2, h3, h4, h5, h6 {
   color: #1e40af;
 }
 
+.btn-draft {
+  background: #f8fafc;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.btn-draft:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+  border-color: #94a3b8;
+}
+
+.draft-banner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.draft-banner a {
+  color: #1e3a8a;
+  font-weight: 600;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.status-badge-draft {
+  color: #475569;
+  background: #f1f5f9;
+}
+
+.status-badge-pending {
+  color: #b45309;
+  background: #fef3c7;
+}
+
 .btn-back {
   background: #f1f5f9;
   color: #1e3a8a;

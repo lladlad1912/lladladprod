@@ -74,6 +74,7 @@ public class SecurityConfig {
                 // Public GET endpoints for posts
                 .requestMatchers(HttpMethod.GET, "/api/posts").permitAll()  // GET all posts - public
                 .requestMatchers(HttpMethod.GET, "/api/posts/search").permitAll()  // Search posts - public
+                .requestMatchers(HttpMethod.GET, "/api/posts/drafts").authenticated()  // Author's drafts - authenticated
                 .requestMatchers(HttpMethod.GET, "/api/posts/{id}").permitAll()  // GET post by ID - public
                 .requestMatchers(HttpMethod.GET, "/api/posts/category/**").permitAll()  // GET posts by category - public
                 .requestMatchers(HttpMethod.GET, "/api/posts/user/**").permitAll()  // GET posts by user - public
