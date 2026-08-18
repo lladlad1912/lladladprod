@@ -43,7 +43,7 @@ function Navbar() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
-  const [searchType, setSearchType] = useState('all'); // all, posts, users, categories
+  const [searchType, setSearchType] = useState('all'); // all, posts, author, categories
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
 
   useEffect(() => {
@@ -249,11 +249,11 @@ function Navbar() {
                           padding: '0.5rem', 
                           cursor: 'pointer', 
                           borderRadius: '4px',
-                          backgroundColor: searchType === 'users' ? '#e0e7ff' : 'transparent'
+                          backgroundColor: searchType === 'author' ? '#e0e7ff' : 'transparent'
                         }}
-                        onClick={() => { setSearchType('users'); setShowFilterDropdown(false); }}
+                        onClick={() => { setSearchType('author'); setShowFilterDropdown(false); }}
                       >
-                        Users
+                        Author
                       </div>
                       <div 
                         style={{ 
@@ -335,11 +335,11 @@ function Navbar() {
                           padding: '0.5rem', 
                           cursor: 'pointer', 
                           borderRadius: '4px',
-                          backgroundColor: searchType === 'users' ? '#e0e7ff' : 'transparent'
+                          backgroundColor: searchType === 'author' ? '#e0e7ff' : 'transparent'
                         }}
-                        onClick={() => { setSearchType('users'); setShowFilterDropdown(false); }}
+                        onClick={() => { setSearchType('author'); setShowFilterDropdown(false); }}
                       >
-                        Users
+                        Author
                       </div>
                       <div 
                         style={{ 

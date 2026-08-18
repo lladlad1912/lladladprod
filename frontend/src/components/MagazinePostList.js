@@ -165,7 +165,7 @@ function MagazinePostList() {
       const results = response.data;
       
       // Handle different search types
-      if (type === 'all' || type === 'posts') {
+      if (type === 'all' || type === 'posts' || type === 'author' || type === 'users') {
         const postResults = results.posts || [];
         const sortedResults = [...postResults].sort((a, b) => {
           const dateA = new Date(a.createdAt || 0);
@@ -173,8 +173,9 @@ function MagazinePostList() {
           return dateB - dateA;
         });
         setDisplayPosts(sortedResults);
+      } else if (type === 'categories') {
+        setDisplayPosts([]);
       } else {
-        // For users/categories search, show empty or handle differently
         setDisplayPosts([]);
       }
       setError(null);
@@ -295,7 +296,14 @@ function MagazinePostList() {
 
           {displayPosts.length === 0 ? (
             <div className="card">
-              <p>No posts found. {user && <Link to="/posts/new">Create your first post!</Link>}</p>
+              <p>
+                {searchParam
+                  ? (searchTypeParam === 'author' || searchTypeParam === 'users'
+                      ? `No posts found for author "${searchParam}".`
+                      : `No results found for "${searchParam}".`)
+                  : 'No posts found.'}
+                {user && !searchParam && <> <Link to="/posts/new">Create your first post!</Link></>}
+              </p>
             </div>
           ) : (
             <div className="magazine-grid">
