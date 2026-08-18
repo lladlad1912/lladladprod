@@ -83,13 +83,13 @@ function Sidebar({ onClose }) {
       facebook: settings.social_facebook || 'https://facebook.com/lladlad',
       instagram: settings.social_instagram || 'https://instagram.com/lladlad',
       twitter: settings.social_twitter || 'https://twitter.com/lladlad',
-      email: `mailto:${settings.contact_email || 'contact@lladlad.com'}`
+      email: '/contact'
     };
     const labelFor = {
       facebook: 'Facebook',
       instagram: 'Instagram',
       twitter: 'Twitter',
-      email: 'Email'
+      email: 'Contact'
     };
     const iconFor = {
       facebook: <FacebookIcon size={18} />,
@@ -448,19 +448,38 @@ function Sidebar({ onClose }) {
         </div>
 
         <div className="sidebar-social-icons">
-          {socialItems.map((item) => (
-            <a
-              key={item.key}
-              href={item.href}
-              target={item.key === 'email' ? undefined : '_blank'}
-              rel={item.key === 'email' ? undefined : 'noopener noreferrer'}
-              className="sidebar-social-icon"
-              aria-label={item.key}
-            >
-              <span className="sidebar-social-icon-left">{item.icon}</span>
-              <span className="sidebar-social-icon-label">{item.label}</span>
-            </a>
-          ))}
+          {socialItems.map((item) => {
+            const isInternal = item.href.startsWith('/');
+            const className = 'sidebar-social-icon';
+            const content = (
+              <>
+                <span className="sidebar-social-icon-left">{item.icon}</span>
+                <span className="sidebar-social-icon-label">{item.label}</span>
+              </>
+            );
+            return isInternal ? (
+              <Link
+                key={item.key}
+                to={item.href}
+                className={className}
+                aria-label={item.key}
+                onClick={onClose}
+              >
+                {content}
+              </Link>
+            ) : (
+              <a
+                key={item.key}
+                href={item.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={className}
+                aria-label={item.key}
+              >
+                {content}
+              </a>
+            );
+          })}
         </div>
 
         {canEditSocial && socialEditMode && (
@@ -612,6 +631,20 @@ function Sidebar({ onClose }) {
             style={{ width: '100%', textAlign: 'center', display: 'block', marginBottom: '0.5rem' }}
           >
             Ads
+          </Link>
+          <Link 
+            to="/admin/clients" 
+            className="btn btn-secondary" 
+            style={{ width: '100%', textAlign: 'center', display: 'block', marginBottom: '0.5rem' }}
+          >
+            Clients
+          </Link>
+          <Link 
+            to="/admin/submissions" 
+            className="btn btn-secondary" 
+            style={{ width: '100%', textAlign: 'center', display: 'block', marginBottom: '0.5rem' }}
+          >
+            Submissions
           </Link>
           <Link 
             to="/statistics" 

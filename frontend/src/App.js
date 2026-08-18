@@ -29,6 +29,11 @@ import PostReviewPage from './components/PostReviewPage';
 import SEO from './components/SEO';
 import ProductsPage from './components/ProductsPage';
 import SitemapPage from './components/SitemapPage';
+import ContactPage from './components/ContactPage';
+import ServicesPage from './components/ServicesPage';
+import ClientInquiryPage from './components/ClientInquiryPage';
+import AdminClients from './components/AdminClients';
+import AdminSubmissions from './components/AdminSubmissions';
 
 function Navbar() {
   const { user, logout } = useAuth();
@@ -40,6 +45,7 @@ function Navbar() {
   const [categories, setCategories] = useState([]);
   const [subCategoriesMap, setSubCategoriesMap] = useState({});
   const [hoveredCategory, setHoveredCategory] = useState(null);
+  const [hoveredServices, setHoveredServices] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
@@ -384,6 +390,40 @@ function Navbar() {
         </div>
         <div className="nav-menu">
           <div className="nav-categories">
+            <div
+              className="nav-category-wrapper"
+              onMouseEnter={() => setHoveredServices(true)}
+              onMouseLeave={() => setHoveredServices(false)}
+            >
+              <Link to="/services" className="nav-category-link">
+                Services
+              </Link>
+              {hoveredServices && (
+                <div className="nav-subcategory-dropdown">
+                  <Link
+                    to="/services"
+                    className="nav-subcategory-link"
+                    onClick={() => setHoveredServices(false)}
+                  >
+                    Our Services
+                  </Link>
+                  <Link
+                    to="/services/inquiry"
+                    className="nav-subcategory-link"
+                    onClick={() => setHoveredServices(false)}
+                  >
+                    Request Services
+                  </Link>
+                  <Link
+                    to="/contact"
+                    className="nav-subcategory-link"
+                    onClick={() => setHoveredServices(false)}
+                  >
+                    Reach Out
+                  </Link>
+                </div>
+              )}
+            </div>
             {(() => {
               const baseOrder = ['Books', 'Movies', 'Tech', 'Dharma', 'Gaming'];
               // Header categories are controlled ONLY via showInHeader flag.
@@ -536,6 +576,22 @@ function AppContent() {
             } 
           />
           <Route 
+            path="/admin/clients" 
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminClients />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/admin/submissions" 
+            element={
+              <ProtectedRoute requireAdmin={true}>
+                <AdminSubmissions />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/drafts" 
             element={
               <ProtectedRoute>
@@ -576,6 +632,9 @@ function AppContent() {
             } 
           />
           <Route path="/write-for-lladlad" element={<WriteForLladlad />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          <Route path="/services/inquiry" element={<ClientInquiryPage />} />
           <Route
             path="/products"
             element={

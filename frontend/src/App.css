@@ -2499,3 +2499,339 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
 }
 
+/* Contact & Services pages */
+.page-shell {
+  max-width: 720px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  width: 100%;
+}
+
+.page-layout-main {
+  width: 100%;
+}
+
+.page-layout-main .page-shell,
+.page-layout-main .services-page {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.contact-form-page {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.contact-form-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.contact-form-header h1 {
+  margin-bottom: 0.75rem;
+}
+
+.contact-form-header p {
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.contact-form-alert {
+  margin-bottom: 1.5rem;
+}
+
+.contact-form-submit {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.contact-form-extra {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  color: #475569;
+  line-height: 1.8;
+}
+
+.services-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+}
+
+.services-hero {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.services-hero h1 {
+  margin-bottom: 1rem;
+}
+
+.services-hero p {
+  color: #64748b;
+  max-width: 720px;
+  margin: 0 auto 1.5rem;
+  line-height: 1.7;
+}
+
+.services-hero-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.services-tabs,
+.clients-filters {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.services-tabs button,
+.clients-filters button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  color: #334155;
+}
+
+.services-tabs button.active,
+.clients-filters button.active {
+  background: #1e3a8a;
+  border-color: #1e3a8a;
+  color: #fff;
+}
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+
+.service-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.service-icon {
+  font-size: 2rem;
+}
+
+.service-card ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.service-card .btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+.clients-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.25rem;
+}
+
+.client-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.client-card-header {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.client-logo,
+.client-logo-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.client-logo {
+  object-fit: cover;
+}
+
+.client-logo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0e7ff;
+  color: #1e3a8a;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+.client-company {
+  color: #64748b;
+  margin: 0.15rem 0;
+}
+
+.client-category-badge {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #3730a3;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.client-description {
+  color: #475569;
+  line-height: 1.6;
+}
+
+.client-update {
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border-left: 3px solid #1e3a8a;
+}
+
+.client-update h4 {
+  margin: 0 0 0.5rem;
+}
+
+.client-update-date {
+  display: block;
+  margin-top: 0.5rem;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.client-website-link {
+  color: #1e3a8a;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.clients-empty {
+  text-align: center;
+  color: #64748b;
+}
+
+.sidebar-nav-btn {
+  width: 100%;
+  text-align: center;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.admin-page {
+  padding: 1rem 0;
+}
+
+.admin-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.admin-page-subtitle {
+  color: #64748b;
+  margin: -0.5rem 0 1.5rem;
+}
+
+.admin-form-card {
+  margin-bottom: 1.5rem;
+}
+
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.admin-form-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admin-list-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.admin-list-meta {
+  color: #64748b;
+  font-size: 0.9rem;
+  margin: 0.25rem 0 0;
+}
+
+.admin-list-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.submissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.submission-card.unread {
+  border-left: 4px solid #1e3a8a;
+}
+
+.submission-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.submission-message {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: #334155;
+}
+
+.unread-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: #1e3a8a;
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
