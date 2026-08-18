@@ -8,10 +8,6 @@ server {
     listen 80;
     server_name YOUR_DOMAIN www.YOUR_DOMAIN;
 
-    location /.well-known/acme-challenge/ {
-        root /var/www/certbot;
-    }
-
     location /api/ {
         proxy_pass http://lladlad_backend/api/;
         include /etc/nginx/snippets/proxy-params.conf;

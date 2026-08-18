@@ -28,9 +28,5 @@ echo "Building and starting STAGING containers (project: ${COMPOSE_PROJECT_NAME:
 docker compose --env-file "$ENV_FILE" up -d --build
 
 echo ""
-echo "Done. Staging test URLs:"
-echo "  HTTP:  http://${DOMAIN}:${NGINX_HTTP_PORT:-8080}/"
-echo "  HTTPS: https://${DOMAIN}:${NGINX_HTTPS_PORT:-8443}/ (after init-letsencrypt.sh)"
-echo ""
-echo "When DNS points to this server, run:"
-echo "  ./scripts/init-letsencrypt.sh $ENV_FILE"
+echo "Done. Staging test URL:"
+echo "  http://${DOMAIN}:${NGINX_HTTP_PORT:-8080}/"

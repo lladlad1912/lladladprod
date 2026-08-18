@@ -27,4 +27,3 @@ docker compose --env-file .env up -d --build
 
 echo ""
 echo "Done. Test: http://${DOMAIN}/"
-echo "When DNS points to this server, run: ./scripts/init-letsencrypt.sh .env"
