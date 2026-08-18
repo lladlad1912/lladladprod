@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getAllSettings, updateSetting, getUserBookmarks, subscribeToNewsletter, getCategories } from '../services/api';
 import { FacebookIcon, InstagramIcon, TwitterIcon } from './SocialIcons';
 import AdPlacement from './AdPlacement';
-import { categoryPath, postPath } from '../utils/urls';
+import { categoryPath, postPath, CORE_NAV_CATEGORIES } from '../utils/urls';
 import '../App.css';
 
 function Sidebar({ onClose }) {
@@ -22,6 +22,8 @@ function Sidebar({ onClose }) {
   const [newsletterNotice, setNewsletterNotice] = useState(null);
   const [subscribing, setSubscribing] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState(null);
   const socialEditorRef = useRef(null);
 
   useEffect(() => {
@@ -63,12 +65,19 @@ function Sidebar({ onClose }) {
 
   const loadCategories = async () => {
     try {
+      setCategoriesLoading(true);
+      setCategoriesError(null);
       const response = await getCategories();
       setCategories(response.data || []);
     } catch (err) {
       console.error('Failed to load categories:', err);
+      setCategoriesError('Could not load categories from server.');
+    } finally {
+      setCategoriesLoading(false);
     }
   };
+
+  const sidebarCategories = categories.length > 0 ? categories : CORE_NAV_CATEGORIES;
 
   const handleLogout = () => {
     logout();
@@ -163,21 +172,33 @@ function Sidebar({ onClose }) {
 
       <div className="sidebar-card">
         <h3>Categories</h3>
-        {categories.length === 0 ? (
-          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>No categories yet</p>
+        {categoriesLoading ? (
+          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>Loading categories...</p>
         ) : (
-          <nav className="sidebar-categories" aria-label="Categories">
-            {categories.map((category) => (
-              <Link
-                key={category.id}
-                to={categoryPath(category)}
-                className={`category-link${location.pathname === categoryPath(category) ? ' active' : ''}`}
-                onClick={onClose}
-              >
-                {category.name}
-              </Link>
-            ))}
-          </nav>
+          <>
+            {categoriesError && (
+              <p style={{ fontSize: '0.85rem', color: '#b45309', marginTop: '0.5rem' }}>
+                {categoriesError} Showing default links.
+              </p>
+            )}
+            <nav className="sidebar-categories" aria-label="Categories">
+              {sidebarCategories.map((category) => (
+                <Link
+                  key={category.id || category.slug || category.name}
+                  to={categoryPath(category)}
+                  className={`category-link${location.pathname === categoryPath(category) ? ' active' : ''}`}
+                  onClick={onClose}
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </nav>
+            {categoriesError && (
+              <button type="button" className="btn btn-secondary sidebar-nav-btn" onClick={loadCategories}>
+                Retry categories
+              </button>
+            )}
+          </>
         )}
       </div>
 

@@ -8,7 +8,7 @@ import AdPlacement from './AdPlacement';
 import SEO from './SEO';
 import StructuredData from './StructuredData';
 import { SITE_URL, uploadUrl } from '../config';
-import { categoryPath, findCategory, postPath } from '../utils/urls';
+import { categoryPath, findCategory, postPath, CORE_NAV_CATEGORIES } from '../utils/urls';
 import '../App.css';
 
 function MagazinePostList() {
@@ -23,6 +23,7 @@ function MagazinePostList() {
   const [posts, setPosts] = useState([]);
   const [displayPosts, setDisplayPosts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [categoriesReady, setCategoriesReady] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [likedPosts, setLikedPosts] = useState(new Set());
@@ -82,19 +83,30 @@ function MagazinePostList() {
   useEffect(() => {
     if (searchParam) {
       loadSearchResults(searchParam, searchTypeParam);
-    } else if ((categorySlug || categoryParam) && categories.length > 0) {
-      loadPostsByCategory(categorySlug || categoryParam);
-    } else if (!categorySlug && !categoryParam) {
-      loadPosts();
+      return;
     }
-  }, [categorySlug, categoryParam, categories, searchParam, searchTypeParam]);
+
+    const categoryKey = categorySlug || categoryParam;
+    if (categoryKey) {
+      if (!categoriesReady) {
+        return;
+      }
+      loadPostsByCategory(categoryKey);
+      return;
+    }
+
+    loadPosts();
+  }, [categorySlug, categoryParam, categories, categoriesReady, searchParam, searchTypeParam]);
 
   const loadCategories = async () => {
     try {
       const response = await getCategories();
-      setCategories(response.data);
+      setCategories(response.data || []);
     } catch (err) {
       console.error('Failed to load categories:', err);
+      setError('Could not load categories. Showing posts when available.');
+    } finally {
+      setCategoriesReady(true);
     }
   };
 
@@ -128,31 +140,26 @@ function MagazinePostList() {
   const loadPostsByCategory = async (categoryKey) => {
     try {
       setLoading(true);
-      const category = findCategory(categories, categoryKey);
-      if (category) {
+      const lookupCategories = categories.length > 0 ? categories : CORE_NAV_CATEGORIES;
+      const category = findCategory(lookupCategories, categoryKey);
+      if (category?.id) {
         const response = await getPostsByCategory(category.id);
         const categoryPosts = response.data.content || response.data;
-        // Sort posts by createdAt in descending order (newest first)
         const sortedPosts = [...categoryPosts].sort((a, b) => {
           const dateA = new Date(a.createdAt || 0);
           const dateB = new Date(b.createdAt || 0);
-          return dateB - dateA; // Descending order
+          return dateB - dateA;
         });
         setPosts(sortedPosts);
         setDisplayPosts(sortedPosts);
       } else {
-        // If category not found yet, wait for categories to load or load all posts
-        if (categories.length === 0) {
-          // Categories not loaded yet, will retry when categories load
-          return;
-        }
-        loadPosts();
+        await loadPosts();
       }
       setError(null);
     } catch (err) {
       setError('Failed to load posts by category.');
       console.error(err);
-      loadPosts(); // Fallback to all posts
+      await loadPosts();
     } finally {
       setLoading(false);
     }

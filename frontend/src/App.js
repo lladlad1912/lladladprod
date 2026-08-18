@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SidebarProvider, useSidebar } from './context/SidebarContext';
 import { getTotalSiteViews, getCategories, getSubCategoriesByCategory, searchPosts, searchAll } from './services/api';
-import { categoryPath } from './utils/urls';
+import { categoryPath, resolveHeaderCategories } from './utils/urls';
 import './App.css';
 import PostList from './components/PostList';
 import MagazinePostList from './components/MagazinePostList';
@@ -40,7 +40,6 @@ function Navbar() {
   const { sidebarOpen, toggleSidebar } = useSidebar();
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const [totalViews, setTotalViews] = useState(0);
   const [categories, setCategories] = useState([]);
   const [subCategoriesMap, setSubCategoriesMap] = useState({});
@@ -51,9 +50,10 @@ function Navbar() {
   const [searchExpanded, setSearchExpanded] = useState(false);
   const [searchType, setSearchType] = useState('all'); // all, posts, author, categories
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const lastScrollYRef = useRef(0);
+  const headerCategories = resolveHeaderCategories(categories);
 
   useEffect(() => {
-    // Load total site views
     const loadTotalViews = async () => {
       try {
         const response = await getTotalSiteViews();
@@ -62,15 +62,13 @@ function Navbar() {
         console.error('Failed to load total views:', err);
       }
     };
-    
-    // Load categories and subcategories
+
     const loadCategories = async () => {
       try {
         const response = await getCategories();
-        const categoriesData = response.data;
+        const categoriesData = response.data || [];
         setCategories(categoriesData);
-        
-        // Load subcategories for each category
+
         const subCategoriesPromises = categoriesData.map(async (category) => {
           try {
             const subResponse = await getSubCategoriesByCategory(category.id);
@@ -80,47 +78,48 @@ function Navbar() {
             return { categoryId: category.id, subCategories: [] };
           }
         });
-        
+
         const subCategoriesResults = await Promise.all(subCategoriesPromises);
-        const subCategoriesMap = {};
+        const nextSubCategoriesMap = {};
         subCategoriesResults.forEach(({ categoryId, subCategories }) => {
-          subCategoriesMap[categoryId] = subCategories;
+          nextSubCategoriesMap[categoryId] = subCategories;
         });
-        setSubCategoriesMap(subCategoriesMap);
+        setSubCategoriesMap(nextSubCategoriesMap);
       } catch (err) {
         console.error('Failed to load categories:', err);
       }
     };
-    
+
     loadTotalViews();
     loadCategories();
-    // Refresh every 30 seconds
     const interval = setInterval(loadTotalViews, 30000);
-    
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
-      // Show navbar when scrolling up, hide when scrolling down
-      if (currentScrollY < 100) {
-        // Always show at top
+
+      if (sidebarOpen) {
         setIsVisible(true);
-      } else if (currentScrollY > lastScrollY) {
-        // Scrolling down - hide
+        lastScrollYRef.current = currentScrollY;
+        return;
+      }
+
+      if (currentScrollY < 100) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollYRef.current) {
         setIsVisible(false);
       } else {
-        // Scrolling up - show
         setIsVisible(true);
       }
-      
-      setLastScrollY(currentScrollY);
+
+      lastScrollYRef.current = currentScrollY;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      clearInterval(interval);
-    };
-  }, [lastScrollY]);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [sidebarOpen]);
 
   const handleLogout = () => {
     logout();
@@ -424,24 +423,13 @@ function Navbar() {
                 </div>
               )}
             </div>
-            {(() => {
-              const baseOrder = ['Books', 'Movies', 'Tech', 'Dharma', 'Gaming'];
-              // Core content categories always appear in the header for all visitors.
-              const base = categories
-                .filter(c => baseOrder.includes(c.name))
-                .sort((a, b) => baseOrder.indexOf(a.name) - baseOrder.indexOf(b.name));
-              // Additional categories only when admin enables "Show in header".
-              const extra = categories
-                .filter(c => !baseOrder.includes(c.name) && c.showInHeader)
-                .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-
-              return [...base, ...extra].map((category) => {
+            {headerCategories.map((category) => {
                 const subCategories = subCategoriesMap[category.id] || [];
                 const hasSubCategories = subCategories.length > 0;
                 
                 return (
                   <div
-                    key={category.id}
+                    key={category.id || category.slug || category.name}
                     className="nav-category-wrapper"
                     onMouseEnter={() => hasSubCategories && setHoveredCategory(category.id)}
                     onMouseLeave={() => setHoveredCategory(null)}
@@ -468,8 +456,7 @@ function Navbar() {
                     )}
                   </div>
                 );
-              });
-            })()}
+              })}
           </div>
           {/* Hits Counter - moved to better location */}
           <div className="nav-hits">
@@ -491,6 +478,18 @@ function Navbar() {
             <Link to="/login" className="nav-link nav-auth">Login</Link>
           )}
         </div>
+      </div>
+      <div className="mobile-header-nav" aria-label="Mobile navigation">
+        <Link to="/services" className="mobile-header-nav-link">Services</Link>
+        {headerCategories.map((category) => (
+          <Link
+            key={`mobile-${category.id || category.slug || category.name}`}
+            to={categoryPath(category)}
+            className="mobile-header-nav-link"
+          >
+            {category.name}
+          </Link>
+        ))}
       </div>
     </nav>
   );

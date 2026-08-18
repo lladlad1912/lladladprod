@@ -49,3 +49,28 @@ export function findCategory(categories, key) {
     (cat.name && cat.name.toLowerCase() === needle)
   ) || null;
 }
+
+/** Fallback when /api/categories is empty or unavailable — keeps nav usable. */
+export const CORE_NAV_CATEGORIES = [
+  { name: 'Books', slug: 'books' },
+  { name: 'Movies', slug: 'movies' },
+  { name: 'Tech', slug: 'tech' },
+  { name: 'Dharma', slug: 'dharma' },
+  { name: 'Gaming', slug: 'gaming' },
+];
+
+export function resolveHeaderCategories(categories) {
+  const baseOrder = CORE_NAV_CATEGORIES.map((c) => c.name);
+  const source = Array.isArray(categories) && categories.length > 0
+    ? categories
+    : CORE_NAV_CATEGORIES;
+
+  const base = source
+    .filter((c) => baseOrder.includes(c.name))
+    .sort((a, b) => baseOrder.indexOf(a.name) - baseOrder.indexOf(b.name));
+  const extra = source
+    .filter((c) => !baseOrder.includes(c.name) && c.showInHeader)
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+  return [...base, ...extra];
+}
