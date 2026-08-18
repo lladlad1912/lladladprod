@@ -96,19 +96,12 @@ function Footer() {
             <div className="footer-contact">
               <p>Have questions or feedback?</p>
               <p>We'd love to hear from you!</p>
-              <div className="footer-social">
-                <a
-                  href={`mailto:${settings.contact_email || 'contact@lladlad.com'}`}
-                  className="social-link"
-                  aria-label="Email"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  <span>Email</span>
-                </a>
-              </div>
+              <ul className="footer-links">
+                <li><Link to="/contact">Contact Form</Link></li>
+                <li><Link to="/services">Services</Link></li>
+                <li><Link to="/services/inquiry">Request Services</Link></li>
+                <li><Link to="/write-for-lladlad">Write for lladlad</Link></li>
+              </ul>
             </div>
           </div>
         </div>

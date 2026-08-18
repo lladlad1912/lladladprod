@@ -31,7 +31,16 @@ public class ContactSubmission {
     private String message;
     
     @Column(name = "submission_type")
-    private String submissionType; // e.g., "write-for-lladlad", "general", "feedback"
+    private String submissionType; // e.g., "write-for-lladlad", "general", "client-inquiry"
+
+    @Column(name = "company")
+    private String company;
+
+    @Column(name = "phone")
+    private String phone;
+
+    @Column(name = "service_type")
+    private String serviceType; // logistics, web-services, other
     
     @Column(name = "is_read")
     private Boolean isRead = false;

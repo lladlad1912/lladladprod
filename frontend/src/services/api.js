@@ -72,10 +72,23 @@ export const reorderAds = (ads) => api.put('/ads/reorder', ads);
 
 // Contact Submissions
 export const submitContact = (submissionData) => api.post('/contact/submit', submissionData);
-export const getAllSubmissions = () => api.get('/contact/submissions');
+export const getAllSubmissions = (type = null) => {
+  const params = type ? `?type=${encodeURIComponent(type)}` : '';
+  return api.get(`/contact/submissions${params}`);
+};
 export const getUnreadSubmissions = () => api.get('/contact/submissions/unread');
 export const markSubmissionAsRead = (id) => api.put(`/contact/submissions/${id}/read`);
 export const deleteSubmission = (id) => api.delete(`/contact/submissions/${id}`);
+
+// Clients API
+export const getActiveClients = (category = null) => {
+  const params = category ? `?category=${encodeURIComponent(category)}` : '';
+  return api.get(`/clients/active${params}`);
+};
+export const getAllClients = () => api.get('/clients');
+export const createClient = (clientData) => api.post('/clients', clientData);
+export const updateClient = (id, clientData) => api.put(`/clients/${id}`, clientData);
+export const deleteClient = (id) => api.delete(`/clients/${id}`);
 export const createPost = (postData) => api.post('/posts', postData);
 export const updatePost = (id, postData) => api.put(`/posts/${id}`, postData);
 export const deletePost = (id) => api.delete(`/posts/${id}`);

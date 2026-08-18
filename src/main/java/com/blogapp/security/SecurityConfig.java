@@ -108,6 +108,10 @@ public class SecurityConfig {
                 .requestMatchers("/api/ads/**").hasRole("ADMIN")  // POST, PUT, DELETE ads - admin only
                 .requestMatchers("/api/contact/submit").permitAll()  // POST contact - public
                 .requestMatchers("/api/contact/**").hasRole("ADMIN")  // GET, PUT, DELETE submissions - admin only
+                .requestMatchers(HttpMethod.GET, "/api/clients/active").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/clients/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/clients").hasRole("ADMIN")
+                .requestMatchers("/api/clients/**").hasRole("ADMIN")
                 .requestMatchers(antMatcher(HttpMethod.GET, "/api/statistics/**")).authenticated()
                 .requestMatchers("/api/statistics/**").authenticated()
                 .requestMatchers("/api/follows/**").authenticated()  // Follow endpoints - authenticated

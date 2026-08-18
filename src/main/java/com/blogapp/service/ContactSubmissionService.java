@@ -39,8 +39,11 @@ public class ContactSubmissionService {
                 message.setSubject("New Contact Submission: " + submission.getSubject());
                 message.setText("Name: " + submission.getName() + "\n" +
                               "Email: " + submission.getEmail() + "\n" +
-                              "Type: " + submission.getSubmissionType() + "\n\n" +
-                              "Message:\n" + submission.getMessage());
+                              "Type: " + submission.getSubmissionType() + "\n" +
+                              (submission.getCompany() != null ? "Company: " + submission.getCompany() + "\n" : "") +
+                              (submission.getPhone() != null ? "Phone: " + submission.getPhone() + "\n" : "") +
+                              (submission.getServiceType() != null ? "Service: " + submission.getServiceType() + "\n" : "") +
+                              "\nMessage:\n" + submission.getMessage());
                 mailSender.send(message);
             }
         } catch (Exception e) {
@@ -53,6 +56,10 @@ public class ContactSubmissionService {
     
     public List<ContactSubmission> getAllSubmissions() {
         return submissionRepository.findByOrderByCreatedAtDesc();
+    }
+
+    public List<ContactSubmission> getSubmissionsByType(String type) {
+        return submissionRepository.findBySubmissionTypeOrderByCreatedAtDesc(type);
     }
     
     public List<ContactSubmission> getUnreadSubmissions() {

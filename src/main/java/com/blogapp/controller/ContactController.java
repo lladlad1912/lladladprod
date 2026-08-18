@@ -25,7 +25,11 @@ public class ContactController {
     
     @GetMapping("/submissions")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<ContactSubmission>> getAllSubmissions() {
+    public ResponseEntity<List<ContactSubmission>> getAllSubmissions(
+            @RequestParam(required = false) String type) {
+        if (type != null && !type.isBlank()) {
+            return ResponseEntity.ok(contactService.getSubmissionsByType(type));
+        }
         return ResponseEntity.ok(contactService.getAllSubmissions());
     }
     
