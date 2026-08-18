@@ -195,10 +195,8 @@ public class DataInitializer implements CommandLineRunner {
                     if (existing.getDescription() == null || existing.getDescription().isEmpty()) {
                         existing.setDescription(description);
                     }
-                    // Ensure default header categories are checked initially, but do not override explicit admin choice.
-                    if (existing.getShowInHeader() == null) {
-                        existing.setShowInHeader(true);
-                    }
+                    // Core navbar categories should always be visible in the header.
+                    existing.setShowInHeader(true);
                     categoryRepository.save(existing);
                 },
                 () -> {

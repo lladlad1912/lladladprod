@@ -426,15 +426,13 @@ function Navbar() {
             </div>
             {(() => {
               const baseOrder = ['Books', 'Movies', 'Tech', 'Dharma', 'Gaming'];
-              // Header categories are controlled ONLY via showInHeader flag.
-              const headerCategories = categories.filter(c => c.showInHeader);
-
-              // Keep the existing header order first, and append any additional header categories to the right.
-              const base = headerCategories
+              // Core content categories always appear in the header for all visitors.
+              const base = categories
                 .filter(c => baseOrder.includes(c.name))
                 .sort((a, b) => baseOrder.indexOf(a.name) - baseOrder.indexOf(b.name));
-              const extra = headerCategories
-                .filter(c => !baseOrder.includes(c.name))
+              // Additional categories only when admin enables "Show in header".
+              const extra = categories
+                .filter(c => !baseOrder.includes(c.name) && c.showInHeader)
                 .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
               return [...base, ...extra].map((category) => {
