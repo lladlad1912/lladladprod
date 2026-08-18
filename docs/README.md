@@ -10,10 +10,11 @@ All project documentation lives in this folder. Start here, then drill into what
 |---|----------|---------|
 | 1 | [ARCHITECTURE.md](./ARCHITECTURE.md) | How frontend, backend, and database connect |
 | 2 | [ENVIRONMENTS.md](./ENVIRONMENTS.md) | **Dev, staging, and production** — profiles, URLs, databases |
-| 3 | [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) | IDEs (IntelliJ + VS Code), local run commands |
-| 4 | [BACKEND.md](./BACKEND.md) | Spring Boot layers, patterns, security, API |
-| 5 | [FRONTEND.md](./FRONTEND.md) | React routes, components, API usage |
-| 6 | [DATABASE.md](./DATABASE.md) | MySQL schema, tables, relationships |
+| 3 | [LOCAL_SETUP.md](./LOCAL_SETUP.md) | **First-time laptop setup** — clone `dev`, JDK 17, Node, which folder to open |
+| 4 | [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) | Extra IDE detail, Maven wrapper, optional MySQL |
+| 5 | [BACKEND.md](./BACKEND.md) | Spring Boot layers, patterns, security, API |
+| 6 | [FRONTEND.md](./FRONTEND.md) | React routes, components, API usage |
+| 7 | [DATABASE.md](./DATABASE.md) | MySQL schema, tables, relationships |
 
 ---
 
@@ -31,7 +32,8 @@ All project documentation lives in this folder. Start here, then drill into what
 
 | I want to… | Read |
 |------------|------|
-| Run locally on my laptop | [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) |
+| Run locally on my laptop (first time) | [LOCAL_SETUP.md](./LOCAL_SETUP.md) |
+| Extra local IDE / MySQL notes | [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md) |
 | Understand dev vs staging vs prod | [ENVIRONMENTS.md](./ENVIRONMENTS.md) |
 | Deploy staging on Contabo | [STAGING.md](./STAGING.md) |
 | Deploy production on Contabo | [DEPLOYMENT.md](./DEPLOYMENT.md) |

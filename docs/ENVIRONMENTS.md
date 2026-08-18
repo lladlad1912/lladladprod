@@ -46,7 +46,8 @@ profile: dev               profile: staging           profile: prod
 cd frontend && npm install && npm start
 ```
 
-**IDE:** IntelliJ (backend) + VS Code (frontend) — see [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
+**First-time setup:** [LOCAL_SETUP.md](./LOCAL_SETUP.md)  
+**IDE extras:** IntelliJ (backend) + VS Code (frontend) — see [LOCAL_DEVELOPMENT.md](./LOCAL_DEVELOPMENT.md).
 
 **Login:** `admin` / `Admin123!@`
 

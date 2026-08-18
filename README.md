@@ -15,7 +15,8 @@ All docs are in **[docs/](./docs/README.md)**.
 | [**Docs index**](./docs/README.md) | Full list and read order |
 | [**Environments**](./docs/ENVIRONMENTS.md) | **Dev, staging, production** — profiles, MySQL, Docker |
 | [**Architecture**](./docs/ARCHITECTURE.md) | How frontend, backend, and DB connect |
-| [**Local development**](./docs/LOCAL_DEVELOPMENT.md) | IntelliJ + VS Code, run locally (H2) |
+| [**Local setup**](./docs/LOCAL_SETUP.md) | **First-time laptop setup** — clone, JDK 17, Node, IntelliJ + VS Code |
+| [**Local development**](./docs/LOCAL_DEVELOPMENT.md) | Extra IDE detail, Maven wrapper, optional MySQL |
 | [**Staging**](./docs/STAGING.md) | Staging on Contabo — MySQL, subdomain, deploy workflow |
 | [**Deployment**](./docs/DEPLOYMENT.md) | Production — Contabo + Docker + Nginx |
 | [**Cloudflare**](./docs/CLOUDFLARE.md) | CDN/WAF in front of VPS |
@@ -47,7 +48,8 @@ npm start
 | Backend | http://localhost:8080 |
 | Login | `admin` / `Admin123!@` |
 
-IDE setup: [docs/LOCAL_DEVELOPMENT.md](./docs/LOCAL_DEVELOPMENT.md)
+First-time laptop setup: [docs/LOCAL_SETUP.md](./docs/LOCAL_SETUP.md)  
+IDE extras: [docs/LOCAL_DEVELOPMENT.md](./docs/LOCAL_DEVELOPMENT.md)
 
 ---
 

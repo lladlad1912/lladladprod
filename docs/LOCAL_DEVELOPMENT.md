@@ -1,6 +1,8 @@
 # Local development — IDEs, prerequisites, and run commands
 
-Use this guide on any machine (without Cursor). You need **two processes** running: backend on port **8080**, frontend on port **3000**.
+**First time on a new laptop?** Start with [LOCAL_SETUP.md](./LOCAL_SETUP.md) (clone, JDK 17, Node, File Explorer paths, `application.properties`).
+
+This page is extra IDE detail. You need **two processes** running: backend on port **8080**, frontend on port **3000**.
 
 ---
 
